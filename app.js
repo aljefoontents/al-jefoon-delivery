@@ -1,12 +1,12 @@
 /* =========================================================
    AL JEFOON TENTS
    DELIVERY MANAGEMENT SYSTEM
-   Supabase Version
-   ========================================================= */
+========================================================= */
+
 
 /* =========================================================
    SUPABASE
-   ========================================================= */
+========================================================= */
 
 const SUPABASE_URL =
   "https://fhgptbaeyvwwgvrdrufu.supabase.co";
@@ -14,33 +14,36 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_qKCf-rC8pKpw7CFvECWWSg_TFVDKLmg";
 
+
 const { createClient } = window.supabase;
 
-const db = createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const db =
+  createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
 
 /* =========================================================
    APPLICATION STATE
-   ========================================================= */
+========================================================= */
 
 let deliveries = [];
+
 let editingId = null;
+
 let currentUser = null;
 
-
-/* =========================================================
-   HELPER
-   ========================================================= */
-
-const $ = id => document.getElementById(id);
+let loginScreenCreated = false;
 
 
 /* =========================================================
-   VIEWS
-   ========================================================= */
+   HELPERS
+========================================================= */
+
+const $ = id =>
+  document.getElementById(id);
+
 
 const views = {
   dashboard: $("dashboardView"),
@@ -50,773 +53,8 @@ const views = {
 
 
 /* =========================================================
-   LOGIN SCREEN
-   ========================================================= */
-
-function createLoginScreen() {
-
-  if ($("loginScreen")) return;
-
-  const screen = document.createElement("div");
-
-  screen.id = "loginScreen";
-
-  screen.style.position = "fixed";
-  screen.style.inset = "0";
-  screen.style.zIndex = "999999";
-  screen.style.width = "100vw";
-  screen.style.height = "100vh";
-  screen.style.display = "flex";
-
-  screen.innerHTML = `
-    <div style="
-      min-height:100vh;
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#f5f6f8;
-      padding:20px;
-      box-sizing:border-box;
-    ">
-
-      <div style="
-        width:100%;
-        max-width:420px;
-        background:white;
-        padding:40px;
-        border-radius:16px;
-        box-shadow:0 15px 40px rgba(0,0,0,.12);
-        box-sizing:border-box;
-      ">
-
-        <div style="
-          text-align:center;
-          margin-bottom:30px;
-        ">
-
-          <div style="
-            width:70px;
-            height:70px;
-            margin:0 auto 15px;
-            background:#fcc224;
-            border-radius:16px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:800;
-            font-size:22px;
-          ">
-            AJT
-          </div>
-
-          <h1 style="
-            margin:0 0 6px;
-            font-size:25px;
-            color:#111;
-          ">
-            AL JEFOON TENTS
-          </h1>
-
-          <p style="
-            margin:0;
-            color:#777;
-          ">
-            Delivery Management System
-          </p>
-
-        </div>
-
-        <form id="loginForm">
-
-          <label style="
-            display:block;
-            margin-bottom:6px;
-            font-weight:600;
-            color:#222;
-          ">
-            Email
-          </label>
-
-          <input
-            id="loginEmail"
-            type="email"
-            required
-            autocomplete="username"
-            placeholder="Enter your email"
-            style="
-              width:100%;
-              padding:13px;
-              border:1px solid #ddd;
-              border-radius:8px;
-              margin-bottom:18px;
-              box-sizing:border-box;
-              font-size:15px;
-            "
-          >
-
-          <label style="
-            display:block;
-            margin-bottom:6px;
-            font-weight:600;
-            color:#222;
-          ">
-            Password
-          </label>
-
-          <input
-            id="loginPassword"
-            type="password"
-            required
-            autocomplete="current-password"
-            placeholder="Enter your password"
-            style="
-              width:100%;
-              padding:13px;
-              border:1px solid #ddd;
-              border-radius:8px;
-              margin-bottom:18px;
-              box-sizing:border-box;
-              font-size:15px;
-            "
-          >
-
-          <div
-            id="loginError"
-            style="
-              display:none;
-              background:#fff0f0;
-              color:#c62828;
-              padding:11px;
-              border-radius:8px;
-              margin-bottom:15px;
-              font-size:14px;
-            "
-          ></div>
-
-          <button
-            type="submit"
-            id="loginButton"
-            style="
-              width:100%;
-              padding:14px;
-              border:0;
-              border-radius:8px;
-              background:#fcc224;
-              color:#111;
-              font-weight:700;
-              font-size:16px;
-              cursor:pointer;
-            "
-          >
-            Sign In
-          </button>
-
-        </form>
-
-      </div>
-
-    </div>
-  `;
-
-  document.body.appendChild(screen);
-
-  $("loginForm").addEventListener(
-    "submit",
-    login
-  );
-}
-
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
-async function login(e) {
-
-  e.preventDefault();
-
-  const email =
-    $("loginEmail").value.trim();
-
-  const password =
-    $("loginPassword").value;
-
-  const button =
-    $("loginButton");
-
-  const error =
-    $("loginError");
-
-  error.style.display = "none";
-
-  button.disabled = true;
-  button.textContent = "Signing in...";
-
-  try {
-
-    const {
-      data,
-      error: loginError
-    } = await db.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (loginError) {
-
-      error.textContent =
-        loginError.message;
-
-      error.style.display =
-        "block";
-
-      button.disabled = false;
-      button.textContent = "Sign In";
-
-      return;
-    }
-
-    currentUser =
-      data.user;
-
-    $("loginScreen").style.display =
-      "none";
-
-    const appShell =
-      document.querySelector(".app-shell");
-
-    if (appShell) {
-      appShell.style.display = "flex";
-    }
-
-    await loadDeliveries();
-
-    addLogoutButton();
-
-    renderDashboard();
-
-  } catch (err) {
-
-    console.error(err);
-
-    error.textContent =
-      "Unable to sign in. Please try again.";
-
-    error.style.display =
-      "block";
-
-  } finally {
-
-    button.disabled = false;
-    button.textContent = "Sign In";
-  }
-}
-
-
-/* =========================================================
-   LOGOUT BUTTON
-   ========================================================= */
-
-function addLogoutButton() {
-
-  const footer =
-    document.querySelector(".sidebar-footer");
-
-  if (!footer || !currentUser) return;
-
-  footer.innerHTML = `
-    <div style="
-      margin-bottom:10px;
-      font-size:12px;
-      line-height:1.5;
-    ">
-      Signed in as<br>
-      <strong>
-        ${escapeHtml(currentUser.email || "")}
-      </strong>
-    </div>
-
-    <button
-      id="logoutButton"
-      style="
-        width:100%;
-        border:1px solid #ddd;
-        background:white;
-        padding:9px 12px;
-        border-radius:7px;
-        cursor:pointer;
-        font-weight:600;
-      "
-    >
-      Sign Out
-    </button>
-  `;
-
-  $("logoutButton").onclick =
-    logout;
-}
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-async function logout() {
-
-  try {
-
-    const {
-      error
-    } = await db.auth.signOut();
-
-    if (error) {
-      console.error(
-        "Logout error:",
-        error
-      );
-
-      toast(
-        "Unable to sign out."
-      );
-
-      return;
-    }
-
-    currentUser = null;
-    deliveries = [];
-    editingId = null;
-
-    const appShell =
-      document.querySelector(
-        ".app-shell"
-      );
-
-    if (appShell) {
-      appShell.style.display =
-        "none";
-    }
-
-    if ($("loginScreen")) {
-
-      $("loginScreen").style.display =
-        "flex";
-
-      $("loginEmail").value =
-        "";
-
-      $("loginPassword").value =
-        "";
-
-      $("loginError").style.display =
-        "none";
-
-      $("loginButton").disabled =
-        false;
-
-      $("loginButton").textContent =
-        "Sign In";
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-    toast(
-      "Unable to sign out."
-    );
-  }
-}
-
-
-/* =========================================================
-   LOAD DELIVERIES
-   ========================================================= */
-
-async function loadDeliveries() {
-
-  if (!currentUser) return;
-
-  try {
-
-    const {
-      data,
-      error
-    } = await db
-      .from("deliveries")
-      .select("*")
-      .eq(
-        "user_id",
-        currentUser.id
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
-
-    if (error) {
-
-      console.error(
-        "Load deliveries error:",
-        error
-      );
-
-      toast(
-        "Unable to load deliveries."
-      );
-
-      deliveries = [];
-
-      return;
-    }
-
-    deliveries =
-      data || [];
-
-  } catch (err) {
-
-    console.error(err);
-
-    deliveries = [];
-
-    toast(
-      "Unable to load deliveries."
-    );
-  }
-}
-
-
-/* =========================================================
-   GENERATE REFERENCE NUMBER
-   ========================================================= */
-
-async function nextRef() {
-
-  const year =
-    new Date().getFullYear();
-
-  const {
-    data,
-    error
-  } = await db
-    .from("deliveries")
-    .select("reference_number")
-    .eq(
-      "user_id",
-      currentUser.id
-    );
-
-  if (error) {
-
-    console.error(
-      "Reference lookup error:",
-      error
-    );
-
-    return `AJT-DEL-${year}-0001`;
-  }
-
-  const numbers =
-    (data || [])
-      .map(row => {
-
-        const match =
-          String(
-            row.reference_number || ""
-          ).match(/(\d{4})$/);
-
-        return match
-          ? parseInt(
-              match[1],
-              10
-            )
-          : 0;
-      })
-      .filter(
-        Number.isFinite
-      );
-
-  const nextNumber =
-    numbers.length
-      ? Math.max(...numbers) + 1
-      : 1;
-
-  return (
-    `AJT-DEL-${year}-` +
-    String(nextNumber)
-      .padStart(4, "0")
-  );
-}
-
-
-/* =========================================================
-   SAVE DELIVERY
-   ========================================================= */
-
-async function saveDelivery(data) {
-
-  if (!currentUser) {
-
-    toast(
-      "Please sign in first."
-    );
-
-    return false;
-  }
-
-  try {
-
-    /* =========================================
-       UPDATE
-       ========================================= */
-
-    if (editingId) {
-
-      const {
-        error
-      } = await db
-        .from("deliveries")
-        .update({
-          delivery_date:
-            data.delivery_date,
-
-          status:
-            data.status,
-
-          customer_name:
-            data.customer_name,
-
-          phone:
-            data.phone,
-
-          address:
-            data.address,
-
-          driver:
-            data.driver,
-
-          vehicle:
-            data.vehicle,
-
-          expected_time:
-            data.expected_time,
-
-          items:
-            data.items,
-
-          notes:
-            data.notes,
-
-          updated_at:
-            new Date().toISOString()
-        })
-        .eq(
-          "id",
-          editingId
-        )
-        .eq(
-          "user_id",
-          currentUser.id
-        );
-
-      if (error) {
-
-        console.error(
-          "Update error:",
-          error
-        );
-
-        toast(
-          "Unable to update delivery: " +
-          error.message
-        );
-
-        return false;
-      }
-
-      toast(
-        "Delivery updated."
-      );
-    }
-
-
-    /* =========================================
-       CREATE
-       ========================================= */
-
-    else {
-
-      const reference =
-        await nextRef();
-
-      const newDelivery = {
-
-        reference_number:
-          reference,
-
-        delivery_date:
-          data.delivery_date,
-
-        status:
-          data.status,
-
-        customer_name:
-          data.customer_name,
-
-        phone:
-          data.phone,
-
-        address:
-          data.address,
-
-        driver:
-          data.driver,
-
-        vehicle:
-          data.vehicle,
-
-        expected_time:
-          data.expected_time,
-
-        items:
-          data.items,
-
-        notes:
-          data.notes,
-
-        user_id:
-          currentUser.id
-      };
-
-      const {
-        error
-      } = await db
-        .from("deliveries")
-        .insert(
-          newDelivery
-        );
-
-      if (error) {
-
-        console.error(
-          "Insert error:",
-          error
-        );
-
-        toast(
-          "Unable to save delivery: " +
-          error.message
-        );
-
-        return false;
-      }
-
-      toast(
-        "Delivery saved successfully."
-      );
-    }
-
-    await loadDeliveries();
-
-    return true;
-
-  } catch (err) {
-
-    console.error(
-      "Save delivery error:",
-      err
-    );
-
-    toast(
-      "An unexpected error occurred."
-    );
-
-    return false;
-  }
-}
-
-
-/* =========================================================
-   DELETE DELIVERY
-   ========================================================= */
-
-async function deleteDelivery(id) {
-
-  const delivery =
-    deliveries.find(
-      d => d.id === id
-    );
-
-  if (!delivery) return;
-
-  const reference =
-    delivery.reference_number ||
-    "this delivery";
-
-  if (
-    !confirm(
-      `Delete ${reference}?`
-    )
-  ) {
-    return;
-  }
-
-  try {
-
-    const {
-      error
-    } = await db
-      .from("deliveries")
-      .delete()
-      .eq(
-        "id",
-        id
-      )
-      .eq(
-        "user_id",
-        currentUser.id
-      );
-
-    if (error) {
-
-      console.error(
-        "Delete error:",
-        error
-      );
-
-      toast(
-        "Unable to delete delivery: " +
-        error.message
-      );
-
-      return;
-    }
-
-    await loadDeliveries();
-
-    renderTable();
-    renderDashboard();
-
-    toast(
-      "Delivery deleted."
-    );
-
-  } catch (err) {
-
-    console.error(err);
-
-    toast(
-      "Unable to delete delivery."
-    );
-  }
-}
-
-
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
+   HTML ESCAPE
+========================================================= */
 
 function escapeHtml(value = "") {
 
@@ -829,70 +67,898 @@ function escapeHtml(value = "") {
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#039;"
-      })[character]
+      }[character])
     );
 }
 
 
 /* =========================================================
+   LOGIN SCREEN
+========================================================= */
+
+function createLoginScreen() {
+
+  if ($("loginScreen")) {
+    return;
+  }
+
+  const screen =
+    document.createElement("div");
+
+  screen.id =
+    "loginScreen";
+
+  screen.innerHTML = `
+
+    <div class="login-background">
+      <div class="login-circle"></div>
+    </div>
+
+    <div class="login-card">
+
+      <div class="login-logo">
+        <img
+          src="logo.png"
+          alt="AL JEFOON TENTS"
+        >
+      </div>
+
+      <div class="login-heading">
+
+        <h1>
+          AL JEFOON TENTS
+        </h1>
+
+        <p>
+          Delivery Management System
+        </p>
+
+      </div>
+
+      <form
+        id="loginForm"
+        class="login-form"
+      >
+
+        <label>
+
+          <span>
+            Email
+          </span>
+
+          <input
+            id="loginEmail"
+            type="email"
+            required
+            autocomplete="username"
+            placeholder="Enter your email"
+          >
+
+        </label>
+
+
+        <label>
+
+          <span>
+            Password
+          </span>
+
+          <input
+            id="loginPassword"
+            type="password"
+            required
+            autocomplete="current-password"
+            placeholder="Enter your password"
+          >
+
+        </label>
+
+
+        <div
+          id="loginError"
+          class="login-error"
+        ></div>
+
+
+        <button
+          type="submit"
+          id="loginButton"
+          class="login-button"
+        >
+          Sign In
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(screen);
+
+  loginScreenCreated = true;
+
+  $("loginForm")
+    .addEventListener(
+      "submit",
+      login
+    );
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+async function login(event) {
+
+  event.preventDefault();
+
+  const email =
+    $("loginEmail")
+      .value
+      .trim();
+
+  const password =
+    $("loginPassword")
+      .value;
+
+  const button =
+    $("loginButton");
+
+  const errorBox =
+    $("loginError");
+
+  errorBox.style.display =
+    "none";
+
+  button.disabled = true;
+
+  button.textContent =
+    "Signing in...";
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await db.auth.signInWithPassword({
+        email,
+        password
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    currentUser =
+      data.user;
+
+
+    if ($("loginScreen")) {
+      $("loginScreen")
+        .style
+        .display = "none";
+    }
+
+
+    const shell =
+      document.querySelector(
+        ".app-shell"
+      );
+
+    if (shell) {
+      shell.style.display =
+        "flex";
+    }
+
+
+    await loadDeliveries();
+
+    addLogoutButton();
+
+    renderDashboard();
+
+    showView("dashboard");
+
+
+  } catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+    errorBox.textContent =
+      error.message ||
+      "Unable to sign in.";
+
+    errorBox.style.display =
+      "block";
+
+  } finally {
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "Sign In";
+  }
+}
+
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
+
+function addLogoutButton() {
+
+  const footer =
+    document.querySelector(
+      ".sidebar-footer"
+    );
+
+  if (!footer) {
+    return;
+  }
+
+
+  const existing =
+    $("logoutButton");
+
+  if (existing) {
+    existing.remove();
+  }
+
+
+  const logout =
+    document.createElement(
+      "button"
+    );
+
+  logout.id =
+    "logoutButton";
+
+  logout.type =
+    "button";
+
+  logout.textContent =
+    "Sign Out";
+
+
+  logout.style.cssText = `
+    width:100%;
+    margin-top:14px;
+    padding:9px 12px;
+    border:1px solid #e1e1e1;
+    border-radius:7px;
+    background:#ffffff;
+    color:#444;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+  `;
+
+
+  logout.onclick =
+    logoutUser;
+
+
+  footer.appendChild(logout);
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logoutUser() {
+
+  try {
+
+    await db.auth.signOut();
+
+  } catch (error) {
+
+    console.error(
+      "Logout error:",
+      error
+    );
+
+  } finally {
+
+    currentUser = null;
+
+    deliveries = [];
+
+    editingId = null;
+
+
+    const shell =
+      document.querySelector(
+        ".app-shell"
+      );
+
+    if (shell) {
+      shell.style.display =
+        "none";
+    }
+
+
+    if ($("logoutButton")) {
+      $("logoutButton").remove();
+    }
+
+
+    if ($("loginScreen")) {
+
+      $("loginScreen")
+        .style
+        .display = "flex";
+
+
+      $("loginEmail").value =
+        "";
+
+      $("loginPassword").value =
+        "";
+
+      $("loginError")
+        .style
+        .display = "none";
+
+
+      $("loginButton")
+        .disabled = false;
+
+      $("loginButton")
+        .textContent =
+        "Sign In";
+    }
+  }
+}
+
+
+/* =========================================================
+   LOAD DELIVERIES
+========================================================= */
+
+async function loadDeliveries() {
+
+  if (!currentUser) {
+    return false;
+  }
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await db
+        .from("deliveries")
+        .select("*")
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    deliveries =
+      data || [];
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(
+      "Load deliveries error:",
+      error
+    );
+
+    toast(
+      "Unable to load deliveries."
+    );
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   NORMALIZE DELIVERY
+   Handles the existing database column names.
+========================================================= */
+
+function normalizeDelivery(d) {
+
+  return {
+
+    id:
+      d.id,
+
+    reference:
+      d.reference_number ||
+      d.reference ||
+      "",
+
+    date:
+      d.delivery_date ||
+      d.date ||
+      "",
+
+    status:
+      d.status ||
+      "Pending",
+
+    customer:
+      d.customer_name ||
+      d.customer ||
+      "",
+
+    phone:
+      d.phone ||
+      "",
+
+    address:
+      d.address ||
+      "",
+
+    driver:
+      d.driver ||
+      "",
+
+    vehicle:
+      d.vehicle ||
+      "",
+
+    expected_time:
+      d.expected_time ||
+      "",
+
+    items:
+      d.items ||
+      "",
+
+    notes:
+      d.notes ||
+      "",
+
+    created_at:
+      d.created_at ||
+      null,
+
+    updated_at:
+      d.updated_at ||
+      null,
+
+    user_id:
+      d.user_id ||
+      null
+  };
+}
+
+
+/* =========================================================
+   GENERATE REFERENCE
+========================================================= */
+
+async function nextRef() {
+
+  const year =
+    new Date()
+      .getFullYear();
+
+
+  let highest =
+    0;
+
+
+  deliveries.forEach(
+    delivery => {
+
+      const d =
+        normalizeDelivery(
+          delivery
+        );
+
+
+      const match =
+        String(d.reference)
+          .match(
+            /^AJT-DEL-(\d{4})-(\d+)$/
+          );
+
+
+      if (
+        match &&
+        Number(match[1]) === year
+      ) {
+
+        const number =
+          parseInt(
+            match[2],
+            10
+          );
+
+
+        if (
+          Number.isFinite(number) &&
+          number > highest
+        ) {
+
+          highest =
+            number;
+        }
+      }
+    }
+  );
+
+
+  return (
+    `AJT-DEL-${year}-${String(
+      highest + 1
+    ).padStart(4, "0")}`
+  );
+}
+
+
+/* =========================================================
+   SAVE DELIVERY
+========================================================= */
+
+async function saveDelivery(formData) {
+
+  if (!currentUser) {
+
+    toast(
+      "Please sign in first."
+    );
+
+    return false;
+  }
+
+
+  const payload = {
+
+    delivery_date:
+      formData.date,
+
+    status:
+      formData.status,
+
+    customer_name:
+      formData.customer,
+
+    phone:
+      formData.phone || null,
+
+    address:
+      formData.address || null,
+
+    driver:
+      formData.driver || null,
+
+    vehicle:
+      formData.vehicle || null,
+
+    expected_time:
+      formData.expected_time || null,
+
+    items:
+      formData.items,
+
+    notes:
+      formData.notes || null,
+
+    updated_at:
+      new Date().toISOString()
+  };
+
+
+  try {
+
+    /* =====================================================
+       EDIT EXISTING
+    ===================================================== */
+
+    if (editingId) {
+
+      const {
+        error
+      } =
+        await db
+          .from("deliveries")
+          .update(payload)
+          .eq(
+            "id",
+            editingId
+          )
+          .eq(
+            "user_id",
+            currentUser.id
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      toast(
+        "Delivery updated successfully."
+      );
+    }
+
+
+    /* =====================================================
+       CREATE NEW
+    ===================================================== */
+
+    else {
+
+      const reference =
+        await nextRef();
+
+
+      const insertPayload = {
+
+        ...payload,
+
+        reference_number:
+          reference,
+
+        user_id:
+          currentUser.id,
+
+        created_at:
+          new Date().toISOString()
+      };
+
+
+      const {
+        error
+      } =
+        await db
+          .from("deliveries")
+          .insert(
+            insertPayload
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      toast(
+        `Delivery ${reference} saved successfully.`
+      );
+    }
+
+
+    await loadDeliveries();
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(
+      "Save delivery error:",
+      error
+    );
+
+
+    let message =
+      "Unable to save delivery.";
+
+
+    if (
+      error &&
+      error.message
+    ) {
+      message =
+        error.message;
+    }
+
+
+    toast(message);
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   DELETE DELIVERY
+========================================================= */
+
+async function deleteDelivery(id) {
+
+  if (!currentUser) {
+    return;
+  }
+
+
+  const raw =
+    deliveries.find(
+      d => d.id === id
+    );
+
+
+  if (!raw) {
+    return;
+  }
+
+
+  const d =
+    normalizeDelivery(
+      raw
+    );
+
+
+  if (
+    !confirm(
+      `Delete delivery ${d.reference}?`
+    )
+  ) {
+    return;
+  }
+
+
+  try {
+
+    const {
+      error
+    } =
+      await db
+        .from("deliveries")
+        .delete()
+        .eq(
+          "id",
+          id
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    await loadDeliveries();
+
+    renderTable();
+
+    renderDashboard();
+
+
+    toast(
+      "Delivery deleted successfully."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Delete error:",
+      error
+    );
+
+
+    toast(
+      error.message ||
+      "Unable to delete delivery."
+    );
+  }
+}
+
+
+/* =========================================================
    STATUS BADGE
-   ========================================================= */
+========================================================= */
 
 function badge(status) {
 
-  const className =
-    status === "Pending"
-      ? "pending"
-      : status === "Out for Delivery"
-        ? "out"
-        : status === "Delivered"
-          ? "delivered"
-          : "cancelled";
+  let className =
+    "pending";
+
+
+  if (
+    status ===
+    "Out for Delivery"
+  ) {
+    className =
+      "out";
+  }
+
+  else if (
+    status ===
+    "Delivered"
+  ) {
+    className =
+      "delivered";
+  }
+
+  else if (
+    status ===
+    "Cancelled"
+  ) {
+    className =
+      "cancelled";
+  }
+
 
   return `
+
     <span class="badge ${className}">
-      ${escapeHtml(status || "")}
+      ${escapeHtml(status || "Pending")}
     </span>
+
   `;
 }
 
 
 /* =========================================================
    SHOW VIEW
-   ========================================================= */
+========================================================= */
 
 function showView(name) {
 
-  if (!views[name]) return;
+  if (!views[name]) {
+    return;
+  }
+
 
   Object.values(views)
-    .forEach(view => {
-
-      if (view) {
+    .forEach(
+      view =>
         view.classList.add(
           "hidden"
-        );
-      }
+        )
+    );
 
-    });
 
   views[name]
     .classList.remove(
       "hidden"
     );
 
+
   document
     .querySelectorAll(
       ".nav-btn"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.classList.toggle(
-        "active",
-        button.dataset.view === name
-      );
+        button.classList.toggle(
+          "active",
+          button.dataset.view ===
+          name
+        );
+      }
+    );
 
-    });
 
   const titles = {
 
@@ -910,27 +976,34 @@ function showView(name) {
       editingId
         ? "Edit Delivery"
         : "New Delivery",
+
       "Create and manage delivery information."
     ]
   };
 
-  if ($("pageTitle")) {
 
-    $("pageTitle").textContent =
-      titles[name][0];
-  }
+  $("pageTitle")
+    .textContent =
+    titles[name][0];
 
-  if ($("pageSubtitle")) {
 
-    $("pageSubtitle").textContent =
-      titles[name][1];
-  }
+  $("pageSubtitle")
+    .textContent =
+    titles[name][1];
 
-  if (name === "dashboard") {
+
+  if (
+    name ===
+    "dashboard"
+  ) {
     renderDashboard();
   }
 
-  if (name === "deliveries") {
+
+  if (
+    name ===
+    "deliveries"
+  ) {
     renderTable();
   }
 }
@@ -938,102 +1011,162 @@ function showView(name) {
 
 /* =========================================================
    OPEN NEW DELIVERY
-   ========================================================= */
+========================================================= */
 
-function openNew() {
+async function openNew() {
 
-  editingId = null;
+  editingId =
+    null;
 
-  if (!$("deliveryForm")) return;
 
-  $("deliveryForm").reset();
+  const form =
+    $("deliveryForm");
 
-  $("editingId").value = "";
 
-  $("deliveryDate").value =
+  if (form) {
+    form.reset();
+  }
+
+
+  $("editingId")
+    .value = "";
+
+
+  $("deliveryDate")
+    .value =
     new Date()
       .toISOString()
-      .slice(0, 10);
+      .slice(
+        0,
+        10
+      );
 
-  $("status").value =
+
+  $("status")
+    .value =
     "Pending";
 
-  $("formTitle").textContent =
+
+  $("formTitle")
+    .textContent =
     "Create New Delivery";
 
-  $("refPreview").textContent =
+
+  $("refPreview")
+    .textContent =
     "Generating...";
 
-  nextRef()
-    .then(reference => {
-
-      if (!editingId) {
-
-        $("refPreview")
-          .textContent =
-          reference;
-      }
-
-    });
 
   showView("new");
+
+
+  const reference =
+    await nextRef();
+
+
+  if (!editingId) {
+
+    $("refPreview")
+      .textContent =
+      reference;
+  }
 }
 
 
 /* =========================================================
    EDIT DELIVERY
-   ========================================================= */
+========================================================= */
 
 function editDelivery(id) {
 
-  const d =
+  const raw =
     deliveries.find(
-      x => x.id === id
+      d => d.id === id
     );
 
-  if (!d) return;
+
+  if (!raw) {
+    return;
+  }
+
+
+  const d =
+    normalizeDelivery(
+      raw
+    );
+
 
   editingId =
     id;
 
-  $("formTitle").textContent =
+
+  $("editingId")
+    .value =
+    id;
+
+
+  $("formTitle")
+    .textContent =
     "Edit Delivery";
 
-  $("refPreview").textContent =
-    d.reference_number || "";
 
-  $("deliveryDate").value =
-    d.delivery_date || "";
+  $("refPreview")
+    .textContent =
+    d.reference ||
+    "Delivery";
 
-  $("status").value =
-    d.status || "Pending";
 
-  $("customer").value =
-    d.customer_name || "";
+  $("deliveryDate")
+    .value =
+    d.date || "";
 
-  $("phone").value =
+
+  $("status")
+    .value =
+    d.status ||
+    "Pending";
+
+
+  $("customer")
+    .value =
+    d.customer || "";
+
+
+  $("phone")
+    .value =
     d.phone || "";
 
-  $("address").value =
+
+  $("address")
+    .value =
     d.address || "";
 
-  $("driver").value =
+
+  $("driver")
+    .value =
     d.driver || "";
 
-  $("vehicle").value =
+
+  $("vehicle")
+    .value =
     d.vehicle || "";
 
-  $("expectedTime").value =
-    d.expected_time || "";
 
-  $("items").value =
+  $("expectedTime")
+    .value =
+    d.expected_time ||
+    "";
+
+
+  $("items")
+    .value =
     d.items || "";
 
-  $("notes").value =
+
+  $("notes")
+    .value =
     d.notes || "";
 
-  $("editingId").value =
-    d.id;
 
   showView("new");
 }
@@ -1041,51 +1174,66 @@ function editDelivery(id) {
 
 /* =========================================================
    DASHBOARD
-   ========================================================= */
+========================================================= */
 
 function renderDashboard() {
 
-  if (!$("statTotal")) return;
+  const normalized =
+    deliveries.map(
+      normalizeDelivery
+    );
+
 
   const total =
-    deliveries.length;
+    normalized.length;
+
 
   const pending =
-    deliveries.filter(
-      d => d.status === "Pending"
+    normalized.filter(
+      d =>
+        d.status ===
+        "Pending"
     ).length;
 
+
   const out =
-    deliveries.filter(
+    normalized.filter(
       d =>
         d.status ===
         "Out for Delivery"
     ).length;
 
+
   const delivered =
-    deliveries.filter(
+    normalized.filter(
       d =>
         d.status ===
         "Delivered"
     ).length;
 
-  $("statTotal").textContent =
+
+  $("statTotal")
+    .textContent =
     total;
 
-  $("statPending").textContent =
+
+  $("statPending")
+    .textContent =
     pending;
 
-  $("statOut").textContent =
+
+  $("statOut")
+    .textContent =
     out;
 
-  $("statDelivered").textContent =
+
+  $("statDelivered")
+    .textContent =
     delivered;
 
 
-  /* RECENT TABLE */
-
-  $("recentTable").innerHTML =
-    deliveries
+  const recent =
+    normalized
       .slice()
       .sort(
         (a, b) =>
@@ -1096,23 +1244,34 @@ function renderDashboard() {
             a.created_at || 0
           )
       )
-      .slice(0, 8)
-      .map(rowHtml)
-      .join("")
-      ||
-      `
+      .slice(
+        0,
+        8
+      );
+
+
+  $("recentTable")
+    .innerHTML =
+    recent.length
+      ? recent
+          .map(
+            rowHtml
+          )
+          .join("")
+      : `
+
         <tr>
+
           <td
             colspan="6"
             class="empty"
           >
             No deliveries yet.
           </td>
+
         </tr>
       `;
 
-
-  /* STATUS OVERVIEW */
 
   const statuses = [
     "Pending",
@@ -1121,91 +1280,107 @@ function renderDashboard() {
     "Cancelled"
   ];
 
-  $("statusOverview").innerHTML =
+
+  $("statusOverview")
+    .innerHTML =
     statuses
-      .map(status => {
+      .map(
+        status => {
 
-        const count =
-          deliveries.filter(
-            d =>
-              d.status ===
-              status
-          ).length;
+          const count =
+            normalized.filter(
+              d =>
+                d.status ===
+                status
+            ).length;
 
-        const percentage =
-          total
-            ? Math.max(
-                2,
-                count /
-                total *
-                100
-              )
-            : 0;
 
-        return `
-          <div class="status-line">
+          const percentage =
+            total
+              ? Math.max(
+                  count
+                    ? 3
+                    : 0,
+                  (
+                    count /
+                    total
+                  ) *
+                  100
+                )
+              : 0;
 
-            <span>
-              ${status}
-            </span>
 
-            <div class="bar">
-              <i
-                style="
-                  width:${percentage}%
-                "
-              ></i>
+          return `
+
+            <div class="status-line">
+
+              <span>
+                ${escapeHtml(status)}
+              </span>
+
+              <div class="bar">
+                <i
+                  style="width:${percentage}%"
+                ></i>
+              </div>
+
+              <b>
+                ${count}
+              </b>
+
             </div>
 
-            <b>
-              ${count}
-            </b>
-
-          </div>
-        `;
-
-      })
+          `;
+        }
+      )
       .join("");
 }
 
 
 /* =========================================================
-   DELIVERY ROW
-   ========================================================= */
+   RECENT TABLE ROW
+========================================================= */
 
 function rowHtml(d) {
 
   return `
+
     <tr>
 
       <td>
         <b>
           ${escapeHtml(
-            d.reference_number || ""
+            d.reference ||
+            "—"
           )}
         </b>
       </td>
 
       <td>
         ${escapeHtml(
-          d.delivery_date || ""
+          d.date ||
+          "—"
         )}
       </td>
 
       <td>
         ${escapeHtml(
-          d.customer_name || ""
+          d.customer ||
+          "—"
         )}
       </td>
 
       <td>
         ${escapeHtml(
-          d.driver || "—"
+          d.driver ||
+          "—"
         )}
       </td>
 
       <td>
-        ${badge(d.status)}
+        ${badge(
+          d.status
+        )}
       </td>
 
       <td>
@@ -1214,18 +1389,16 @@ function rowHtml(d) {
 
           <button
             class="icon-btn"
-            onclick="
-              editDelivery('${d.id}')
-            "
+            type="button"
+            onclick="editDelivery('${d.id}')"
           >
             Edit
           </button>
 
           <button
             class="icon-btn"
-            onclick="
-              printDelivery('${d.id}')
-            "
+            type="button"
+            onclick="printDelivery('${d.id}')"
           >
             Print
           </button>
@@ -1235,53 +1408,76 @@ function rowHtml(d) {
       </td>
 
     </tr>
+
   `;
 }
 
 
 /* =========================================================
-   ALL DELIVERIES TABLE
-   ========================================================= */
+   ALL DELIVERIES
+========================================================= */
 
 function renderTable() {
 
-  if (!$("allTable")) return;
+  const searchElement =
+    $("searchInput");
+
+
+  const statusElement =
+    $("statusFilter");
+
 
   const query =
-    $("searchInput")
-      .value
-      .toLowerCase()
-      .trim();
+    searchElement
+      ? searchElement.value
+          .toLowerCase()
+          .trim()
+      : "";
+
 
   const status =
-    $("statusFilter").value;
+    statusElement
+      ? statusElement.value
+      : "";
+
 
   const rows =
     deliveries
+      .map(
+        normalizeDelivery
+      )
       .filter(
         d =>
           !status ||
           d.status === status
       )
-      .filter(d => {
+      .filter(
+        d => {
 
-        if (!query) return true;
+          if (!query) {
+            return true;
+          }
 
-        return [
-          d.reference_number,
-          d.delivery_date,
-          d.customer_name,
-          d.phone,
-          d.driver,
-          d.vehicle,
-          d.address,
-          d.items,
-          d.notes
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      })
+
+          return [
+
+            d.reference,
+            d.customer,
+            d.phone,
+            d.driver,
+            d.vehicle,
+            d.address,
+            d.items,
+            d.notes
+
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(
+              query
+            );
+        }
+      )
       .sort(
         (a, b) =>
           new Date(
@@ -1292,91 +1488,99 @@ function renderTable() {
           )
       );
 
-  $("allTable").innerHTML =
+
+  $("allTable")
+    .innerHTML =
     rows
-      .map(d => `
+      .map(
+        d => `
 
-        <tr>
+          <tr>
 
-          <td>
-            <b>
+            <td>
+              <b>
+                ${escapeHtml(
+                  d.reference ||
+                  "—"
+                )}
+              </b>
+            </td>
+
+            <td>
               ${escapeHtml(
-                d.reference_number || ""
+                d.date ||
+                "—"
               )}
-            </b>
-          </td>
+            </td>
 
-          <td>
-            ${escapeHtml(
-              d.delivery_date || ""
-            )}
-          </td>
+            <td>
+              ${escapeHtml(
+                d.customer ||
+                "—"
+              )}
+            </td>
 
-          <td>
-            ${escapeHtml(
-              d.customer_name || ""
-            )}
-          </td>
+            <td>
+              ${escapeHtml(
+                d.phone ||
+                "—"
+              )}
+            </td>
 
-          <td>
-            ${escapeHtml(
-              d.phone || "—"
-            )}
-          </td>
+            <td>
+              ${escapeHtml(
+                d.driver ||
+                "—"
+              )}
+            </td>
 
-          <td>
-            ${escapeHtml(
-              d.driver || "—"
-            )}
-          </td>
+            <td>
+              ${badge(
+                d.status
+              )}
+            </td>
 
-          <td>
-            ${badge(d.status)}
-          </td>
+            <td>
 
-          <td>
+              <div class="row-actions">
 
-            <div class="row-actions">
+                <button
+                  class="icon-btn"
+                  type="button"
+                  onclick="editDelivery('${d.id}')"
+                >
+                  Edit
+                </button>
 
-              <button
-                class="icon-btn"
-                onclick="
-                  editDelivery('${d.id}')
-                "
-              >
-                Edit
-              </button>
+                <button
+                  class="icon-btn"
+                  type="button"
+                  onclick="printDelivery('${d.id}')"
+                >
+                  Print
+                </button>
 
-              <button
-                class="icon-btn"
-                onclick="
-                  printDelivery('${d.id}')
-                "
-              >
-                Print
-              </button>
+                <button
+                  class="icon-btn"
+                  type="button"
+                  onclick="deleteDelivery('${d.id}')"
+                >
+                  Delete
+                </button>
 
-              <button
-                class="icon-btn"
-                onclick="
-                  deleteDelivery('${d.id}')
-                "
-              >
-                Delete
-              </button>
+              </div>
 
-            </div>
+            </td>
 
-          </td>
+          </tr>
 
-        </tr>
-
-      `)
+        `
+      )
       .join("");
 
+
   $("emptyState")
-    .classList
-    .toggle(
+    .classList.toggle(
       "hidden",
       rows.length > 0
     );
@@ -1385,34 +1589,67 @@ function renderTable() {
 
 /* =========================================================
    PRINT DELIVERY
-   ========================================================= */
+========================================================= */
 
 function printDelivery(id) {
 
-  const d =
+  const raw =
     deliveries.find(
-      x => x.id === id
+      d => d.id === id
     );
 
-  if (!d) return;
+
+  if (!raw) {
+    return;
+  }
+
+
+  const d =
+    normalizeDelivery(
+      raw
+    );
+
 
   const w =
     window.open(
       "",
       "_blank",
-      "width=850,height=700"
+      "width=900,height=750"
     );
+
 
   if (!w) {
 
     alert(
-      "Please allow pop-ups to print the delivery."
+      "Please allow pop-ups to print the delivery note."
     );
 
     return;
   }
 
+
+  const items =
+    escapeHtml(
+      d.items
+    ).replace(
+      /\n/g,
+      "<br>"
+    );
+
+
+  const notes =
+    escapeHtml(
+      d.notes ||
+      ""
+    ).replace(
+      /\n/g,
+      "<br>"
+    );
+
+
   w.document.write(`
+
+    <!DOCTYPE html>
 
     <html>
 
@@ -1420,41 +1657,179 @@ function printDelivery(id) {
 
       <title>
         ${escapeHtml(
-          d.reference_number || ""
+          d.reference
         )}
       </title>
 
       <style>
 
-        body {
-          font-family: Arial, sans-serif;
-          padding: 35px;
-          color: #111;
+        * {
+          box-sizing:border-box;
         }
 
-        h1 {
-          margin: 0;
+        body {
+          margin:0;
+          padding:40px;
+
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+
+          color:#111;
+
+          background:#fff;
+        }
+
+        .page {
+          max-width:850px;
+          margin:auto;
+        }
+
+        .header {
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+
+          padding-bottom:20px;
+
+          border-bottom:4px solid #FCC224;
+        }
+
+        .logo {
+          width:75px;
+          height:75px;
+
+          object-fit:cover;
+
+          border-radius:12px;
+        }
+
+        .company h1 {
+          margin:0;
+
+          font-size:25px;
+
+          font-weight:900;
+        }
+
+        .company p {
+          margin:5px 0 0;
+
+          color:#666;
+
+          font-size:12px;
+        }
+
+        .reference {
+          text-align:right;
+
+          background:#fff7d6;
+
+          padding:12px 15px;
+
+          border-radius:8px;
+        }
+
+        .reference span {
+          display:block;
+
+          color:#8b6500;
+
+          font-size:9px;
+
+          font-weight:bold;
+
+          letter-spacing:1px;
+        }
+
+        .reference strong {
+          display:block;
+
+          margin-top:4px;
+
+          font-size:13px;
+        }
+
+        h2 {
+          margin:25px 0 10px;
+
+          font-size:16px;
         }
 
         table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 25px;
+          width:100%;
+
+          border-collapse:collapse;
+
+          margin-top:15px;
         }
 
         td {
-          padding: 10px;
-          border-bottom: 1px solid #ddd;
-          vertical-align: top;
+          padding:10px 12px;
+
+          border-bottom:1px solid #e5e5e5;
+
+          vertical-align:top;
+
+          font-size:12px;
         }
 
         td:first-child {
-          font-weight: bold;
-          width: 180px;
+          width:180px;
+
+          font-weight:bold;
+
+          background:#fafafa;
         }
 
         .items {
-          white-space: pre-wrap;
+          white-space:normal;
+
+          line-height:1.7;
+        }
+
+        .signature-area {
+          display:grid;
+
+          grid-template-columns:
+            1fr 1fr;
+
+          gap:50px;
+
+          margin-top:80px;
+        }
+
+        .signature {
+          padding-top:35px;
+
+          border-top:1px solid #222;
+
+          font-size:11px;
+
+          color:#555;
+        }
+
+        .footer {
+          margin-top:50px;
+
+          padding-top:15px;
+
+          border-top:2px solid #FCC224;
+
+          color:#777;
+
+          font-size:10px;
+
+          text-align:center;
+        }
+
+        @media print {
+
+          body {
+            padding:20px;
+          }
+
         }
 
       </style>
@@ -1463,126 +1838,176 @@ function printDelivery(id) {
 
     <body>
 
-      <h1>
-        AL JEFOON TENTS
-      </h1>
+      <div class="page">
 
-      <p>
-        Delivery Note
-      </p>
+        <div class="header">
 
-      <hr>
+          <div>
 
-      <table>
+            <img
+              src="logo.png"
+              class="logo"
+              alt="AL JEFOON TENTS"
+            >
 
-        <tr>
-          <td>Reference</td>
-          <td>
-            ${escapeHtml(
-              d.reference_number || ""
-            )}
-          </td>
-        </tr>
+          </div>
 
-        <tr>
-          <td>Date</td>
-          <td>
-            ${escapeHtml(
-              d.delivery_date || ""
-            )}
-          </td>
-        </tr>
+          <div class="company">
 
-        <tr>
-          <td>Customer</td>
-          <td>
-            ${escapeHtml(
-              d.customer_name || ""
-            )}
-          </td>
-        </tr>
+            <h1>
+              AL JEFOON TENTS
+            </h1>
 
-        <tr>
-          <td>Phone</td>
-          <td>
-            ${escapeHtml(
-              d.phone || ""
-            )}
-          </td>
-        </tr>
+            <p>
+              Delivery Management System
+            </p>
 
-        <tr>
-          <td>Address</td>
-          <td>
-            ${escapeHtml(
-              d.address || ""
-            )}
-          </td>
-        </tr>
+          </div>
 
-        <tr>
-          <td>Driver</td>
-          <td>
-            ${escapeHtml(
-              d.driver || ""
-            )}
-          </td>
-        </tr>
+          <div class="reference">
 
-        <tr>
-          <td>Vehicle</td>
-          <td>
-            ${escapeHtml(
-              d.vehicle || ""
-            )}
-          </td>
-        </tr>
+            <span>
+              DELIVERY REFERENCE
+            </span>
 
-        <tr>
-          <td>Expected Time</td>
-          <td>
-            ${escapeHtml(
-              d.expected_time || ""
-            )}
-          </td>
-        </tr>
+            <strong>
+              ${escapeHtml(
+                d.reference
+              )}
+            </strong>
 
-        <tr>
-          <td>Status</td>
-          <td>
-            ${escapeHtml(
-              d.status || ""
-            )}
-          </td>
-        </tr>
+          </div>
 
-        <tr>
-          <td>Items / Equipment</td>
-          <td class="items">
-            ${escapeHtml(
-              d.items || ""
-            )}
-          </td>
-        </tr>
+        </div>
 
-        <tr>
-          <td>Notes</td>
-          <td class="items">
-            ${escapeHtml(
-              d.notes || ""
-            )}
-          </td>
-        </tr>
 
-      </table>
+        <h2>
+          Delivery Note
+        </h2>
 
-      <p style="margin-top:60px">
-        Customer Signature:
-        __________________________________________
-      </p>
+
+        <table>
+
+          <tr>
+            <td>Delivery Date</td>
+            <td>
+              ${escapeHtml(
+                d.date
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Status</td>
+            <td>
+              ${escapeHtml(
+                d.status
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Customer / Company</td>
+            <td>
+              ${escapeHtml(
+                d.customer
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Contact Number</td>
+            <td>
+              ${escapeHtml(
+                d.phone ||
+                "—"
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Delivery Address</td>
+            <td>
+              ${escapeHtml(
+                d.address ||
+                "—"
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Driver</td>
+            <td>
+              ${escapeHtml(
+                d.driver ||
+                "—"
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Vehicle</td>
+            <td>
+              ${escapeHtml(
+                d.vehicle ||
+                "—"
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Expected Time</td>
+            <td>
+              ${escapeHtml(
+                d.expected_time ||
+                "—"
+              )}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Items / Equipment</td>
+            <td class="items">
+              ${items}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Notes</td>
+            <td class="items">
+              ${notes || "—"}
+            </td>
+          </tr>
+
+        </table>
+
+
+        <div class="signature-area">
+
+          <div class="signature">
+            Driver Signature
+          </div>
+
+          <div class="signature">
+            Customer Signature
+          </div>
+
+        </div>
+
+
+        <div class="footer">
+          AL JEFOON TENTS — Delivery Note
+        </div>
+
+      </div>
+
 
       <script>
-        window.print();
+
+        window.onload = function() {
+          window.print();
+        };
+
       <\/script>
 
     </body>
@@ -1591,17 +2016,19 @@ function printDelivery(id) {
 
   `);
 
+
   w.document.close();
 }
 
 
 /* =========================================================
    EXPORT CSV
-   ========================================================= */
+========================================================= */
 
 function exportCsv() {
 
   const headers = [
+
     "Reference",
     "Date",
     "Status",
@@ -1613,67 +2040,84 @@ function exportCsv() {
     "Expected Time",
     "Items",
     "Notes"
+
   ];
 
-  const keys = [
-    "reference_number",
-    "delivery_date",
-    "status",
-    "customer_name",
-    "phone",
-    "address",
-    "driver",
-    "vehicle",
-    "expected_time",
-    "items",
-    "notes"
-  ];
 
   const rows =
-    deliveries.map(
-      d =>
-        keys.map(
-          key =>
-            d[key] ?? ""
-        )
-    );
+    deliveries
+      .map(
+        normalizeDelivery
+      )
+      .map(
+        d => [
+
+          d.reference,
+          d.date,
+          d.status,
+          d.customer,
+          d.phone,
+          d.address,
+          d.driver,
+          d.vehicle,
+          d.expected_time,
+          d.items,
+          d.notes
+
+        ]
+      );
+
 
   const csv =
-    [headers, ...rows]
+    [
+      headers,
+      ...rows
+    ]
       .map(
         row =>
           row
             .map(
               value =>
-                `"${String(value)
-                  .replace(
-                    /"/g,
-                    '""'
-                  )}"`
+                `"${String(
+                  value ?? ""
+                ).replace(
+                  /"/g,
+                  '""'
+                )}"`
             )
             .join(",")
       )
       .join("\n");
 
+
+  const blob =
+    new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
   const url =
     URL.createObjectURL(
-      new Blob(
-        [csv],
-        {
-          type: "text/csv"
-        }
-      )
+      blob
     );
+
 
   const a =
     document.createElement(
       "a"
     );
 
-  a.href = url;
+
+  a.href =
+    url;
 
   a.download =
     "al-jefoon-deliveries.csv";
+
 
   document.body.appendChild(a);
 
@@ -1681,42 +2125,69 @@ function exportCsv() {
 
   a.remove();
 
-  URL.revokeObjectURL(url);
+
+  URL.revokeObjectURL(
+    url
+  );
+
+
+  toast(
+    "CSV exported successfully."
+  );
 }
 
 
 /* =========================================================
    BACKUP
-   ========================================================= */
+========================================================= */
 
 function backup() {
 
+  const data =
+    deliveries.map(
+      normalizeDelivery
+    );
+
+
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          data,
+          null,
+          2
+        )
+      ],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+
   const url =
     URL.createObjectURL(
-      new Blob(
-        [
-          JSON.stringify(
-            deliveries,
-            null,
-            2
-          )
-        ],
-        {
-          type:
-            "application/json"
-        }
-      )
+      blob
     );
+
 
   const a =
     document.createElement(
       "a"
     );
 
-  a.href = url;
+
+  a.href =
+    url;
 
   a.download =
-    "ajt-delivery-backup.json";
+    `ajt-delivery-backup-${new Date()
+      .toISOString()
+      .slice(
+        0,
+        10
+      )}.json`;
+
 
   document.body.appendChild(a);
 
@@ -1724,13 +2195,21 @@ function backup() {
 
   a.remove();
 
-  URL.revokeObjectURL(url);
+
+  URL.revokeObjectURL(
+    url
+  );
+
+
+  toast(
+    "Backup downloaded successfully."
+  );
 }
 
 
 /* =========================================================
    RESTORE BACKUP
-   ========================================================= */
+========================================================= */
 
 async function restoreBackup(file) {
 
@@ -1743,6 +2222,7 @@ async function restoreBackup(file) {
     return;
   }
 
+
   try {
 
     const data =
@@ -1750,107 +2230,145 @@ async function restoreBackup(file) {
         await file.text()
       );
 
-    if (!Array.isArray(data)) {
+
+    if (
+      !Array.isArray(data)
+    ) {
       throw new Error(
-        "Invalid format"
+        "Backup must contain an array."
       );
     }
 
+
     if (
-      !confirm(
-        `Restore ${data.length} deliveries into the database?`
-      )
+      !data.length
     ) {
+
+      toast(
+        "Backup contains no deliveries."
+      );
+
       return;
     }
 
+
+    const confirmed =
+      confirm(
+        `Restore ${data.length} deliveries into the database?`
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
     const records =
-      data.map(d => ({
+      data.map(
+        d => {
 
-        reference_number:
-          d.reference_number ||
-          d.reference ||
-          "",
+          const item =
+            normalizeDelivery(
+              d
+            );
 
-        delivery_date:
-          d.delivery_date ||
-          d.date ||
-          null,
 
-        status:
-          d.status ||
-          "Pending",
+          return {
 
-        customer_name:
-          d.customer_name ||
-          d.customer ||
-          "",
+            reference_number:
+              item.reference ||
+              null,
 
-        phone:
-          d.phone ||
-          "",
+            delivery_date:
+              item.date ||
+              null,
 
-        address:
-          d.address ||
-          "",
+            status:
+              item.status ||
+              "Pending",
 
-        driver:
-          d.driver ||
-          "",
+            customer_name:
+              item.customer ||
+              "",
 
-        vehicle:
-          d.vehicle ||
-          "",
+            phone:
+              item.phone ||
+              null,
 
-        expected_time:
-          d.expected_time ||
-          null,
+            address:
+              item.address ||
+              null,
 
-        items:
-          d.items ||
-          "",
+            driver:
+              item.driver ||
+              null,
 
-        notes:
-          d.notes ||
-          "",
+            vehicle:
+              item.vehicle ||
+              null,
 
-        user_id:
-          currentUser.id
-      }));
+            expected_time:
+              item.expected_time ||
+              null,
+
+            items:
+              item.items ||
+              "",
+
+            notes:
+              item.notes ||
+              null,
+
+            user_id:
+              currentUser.id,
+
+            created_at:
+              new Date()
+                .toISOString(),
+
+            updated_at:
+              new Date()
+                .toISOString()
+          };
+        }
+      );
+
 
     const {
       error
-    } = await db
-      .from("deliveries")
-      .insert(records);
+    } =
+      await db
+        .from("deliveries")
+        .insert(
+          records
+        );
+
 
     if (error) {
-
-      console.error(
-        "Restore error:",
-        error
-      );
-
-      alert(
-        error.message
-      );
-
-      return;
+      throw error;
     }
+
 
     await loadDeliveries();
 
     renderDashboard();
 
+
     toast(
       "Backup restored successfully."
     );
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Restore error:",
+      error
+    );
+
 
     alert(
+      error.message ||
       "Invalid backup file."
     );
   }
@@ -1859,66 +2377,86 @@ async function restoreBackup(file) {
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
 function toast(message) {
 
   const element =
     $("toast");
 
+
   if (!element) {
-
-    alert(message);
-
     return;
   }
 
+
   element.textContent =
     message;
+
 
   element.classList.add(
     "show"
   );
 
-  setTimeout(
-    () => {
 
-      element.classList.remove(
-        "show"
-      );
-
-    },
-    2500
+  clearTimeout(
+    element._toastTimer
   );
+
+
+  element._toastTimer =
+    setTimeout(
+      () => {
+
+        element.classList.remove(
+          "show"
+        );
+
+      },
+      2800
+    );
 }
 
 
 /* =========================================================
-   DELIVERY FORM
-   ========================================================= */
+   DELIVERY FORM SUBMIT
+========================================================= */
 
-function setupDeliveryForm() {
-
-  const form =
-    $("deliveryForm");
-
-  if (!form) return;
-
-  form.addEventListener(
+$("deliveryForm")
+  .addEventListener(
     "submit",
-    async e => {
+    async event => {
 
-      e.preventDefault();
+      event.preventDefault();
+
+
+      const button =
+        $("saveDeliveryBtn");
+
+
+      if (
+        !currentUser
+      ) {
+
+        toast(
+          "Please sign in first."
+        );
+
+        return;
+      }
+
 
       const data = {
 
-        delivery_date:
-          $("deliveryDate").value,
+        date:
+          $("deliveryDate")
+            .value,
 
         status:
-          $("status").value,
+          $("status")
+            .value,
 
-        customer_name:
+        customer:
           $("customer")
             .value
             .trim(),
@@ -1944,7 +2482,8 @@ function setupDeliveryForm() {
             .trim(),
 
         expected_time:
-          $("expectedTime").value ||
+          $("expectedTime")
+            .value ||
           null,
 
         items:
@@ -1958,70 +2497,76 @@ function setupDeliveryForm() {
             .trim()
       };
 
+
+      /* Browser validation */
+
       if (
-        !data.delivery_date ||
-        !data.customer_name ||
-        !data.items
+        !$("deliveryForm")
+          .checkValidity()
       ) {
 
-        toast(
-          "Please complete all required fields."
-        );
+        $("deliveryForm")
+          .reportValidity();
 
         return;
       }
 
-      const submitButton =
-        form.querySelector(
-          'button[type="submit"]'
+
+      button.disabled =
+        true;
+
+      button.innerHTML =
+        "<span>⏳</span> Saving...";
+
+
+      try {
+
+        const saved =
+          await saveDelivery(
+            data
+          );
+
+
+        if (!saved) {
+          return;
+        }
+
+
+        editingId =
+          null;
+
+
+        $("deliveryForm")
+          .reset();
+
+
+        showView(
+          "dashboard"
         );
 
-      if (submitButton) {
 
-        submitButton.disabled =
-          true;
+      } finally {
 
-        submitButton.textContent =
-          "Saving...";
-      }
-
-      const saved =
-        await saveDelivery(
-          data
-        );
-
-      if (submitButton) {
-
-        submitButton.disabled =
+        button.disabled =
           false;
 
-        submitButton.textContent =
-          "Save Delivery";
+        button.innerHTML =
+          "<span>✓</span> Save Delivery";
       }
-
-      if (!saved) return;
-
-      editingId = null;
-
-      showView(
-        "dashboard"
-      );
     }
   );
-}
 
 
 /* =========================================================
    NAVIGATION
-   ========================================================= */
+========================================================= */
 
-function setupNavigation() {
-
-  document
-    .querySelectorAll(
-      ".nav-btn"
-    )
-    .forEach(button => {
+document
+  .querySelectorAll(
+    ".nav-btn"
+  )
+  .forEach(
+    button => {
 
       button.addEventListener(
         "click",
@@ -2030,258 +2575,233 @@ function setupNavigation() {
           const view =
             button.dataset.view;
 
-          if (view === "new") {
+
+          if (
+            view ===
+            "new"
+          ) {
 
             openNew();
 
           } else {
 
-            showView(view);
+            showView(
+              view
+            );
           }
-
         }
       );
-
-    });
-
-
-  if ($("topNewBtn")) {
-
-    $("topNewBtn").onclick =
-      openNew;
-  }
-
-
-  if ($("viewAllBtn")) {
-
-    $("viewAllBtn").onclick =
-      () =>
-        showView(
-          "deliveries"
-        );
-  }
-
-
-  if ($("cancelForm")) {
-
-    $("cancelForm").onclick =
-      () => {
-
-        editingId = null;
-
-        showView(
-          "dashboard"
-        );
-      };
-  }
-
-
-  document
-    .querySelectorAll(
-      "[data-action]"
-    )
-    .forEach(button => {
-
-      button.onclick = () => {
-
-        if (
-          button.dataset.action ===
-          "new"
-        ) {
-
-          openNew();
-
-        } else {
-
-          showView(
-            "deliveries"
-          );
-        }
-
-      };
-
-    });
-}
-
-
-/* =========================================================
-   SEARCH & FILTERS
-   ========================================================= */
-
-function setupFilters() {
-
-  if ($("searchInput")) {
-
-    $("searchInput")
-      .addEventListener(
-        "input",
-        renderTable
-      );
-  }
-
-
-  if ($("statusFilter")) {
-
-    $("statusFilter")
-      .addEventListener(
-        "change",
-        renderTable
-      );
-  }
-
-
-  if ($("clearFilters")) {
-
-    $("clearFilters").onclick =
-      () => {
-
-        $("searchInput").value =
-          "";
-
-        $("statusFilter").value =
-          "";
-
-        renderTable();
-      };
-  }
-}
-
-
-/* =========================================================
-   EXPORT / BACKUP / RESTORE BUTTONS
-   ========================================================= */
-
-function setupDataButtons() {
-
-  if ($("exportCsvBtn")) {
-
-    $("exportCsvBtn").onclick =
-      exportCsv;
-  }
-
-
-  if ($("backupBtn")) {
-
-    $("backupBtn").onclick =
-      backup;
-  }
-
-
-  if ($("restoreInput")) {
-
-    $("restoreInput")
-      .addEventListener(
-        "change",
-        e => {
-
-          const file =
-            e.target.files[0];
-
-          if (file) {
-
-            restoreBackup(file);
-          }
-
-          e.target.value =
-            "";
-        }
-      );
-  }
-}
-
-
-/* =========================================================
-   AUTH STATE
-   ========================================================= */
-
-function setupAuthListener() {
-
-  db.auth.onAuthStateChange(
-    async (
-      event,
-      session
-    ) => {
-
-      console.log(
-        "Auth event:",
-        event
-      );
-
-      if (
-        event ===
-        "SIGNED_OUT"
-      ) {
-
-        currentUser = null;
-
-        deliveries = [];
-
-        editingId = null;
-
-        const shell =
-          document.querySelector(
-            ".app-shell"
-          );
-
-        if (shell) {
-
-          shell.style.display =
-            "none";
-        }
-
-        if ($("loginScreen")) {
-
-          $("loginScreen")
-            .style
-            .display =
-            "flex";
-        }
-      }
-
     }
   );
-}
+
+
+/* =========================================================
+   TOP NEW BUTTON
+========================================================= */
+
+$("topNewBtn")
+  .addEventListener(
+    "click",
+    openNew
+  );
+
+
+/* =========================================================
+   TABLE NEW BUTTON
+========================================================= */
+
+$("tableNewBtn")
+  .addEventListener(
+    "click",
+    openNew
+  );
+
+
+/* =========================================================
+   VIEW ALL
+========================================================= */
+
+$("viewAllBtn")
+  .addEventListener(
+    "click",
+    () =>
+      showView(
+        "deliveries"
+      )
+  );
+
+
+/* =========================================================
+   CANCEL FORM
+========================================================= */
+
+$("cancelForm")
+  .addEventListener(
+    "click",
+    () => {
+
+      editingId =
+        null;
+
+      showView(
+        "dashboard"
+      );
+    }
+  );
+
+
+/* =========================================================
+   QUICK ACTIONS
+========================================================= */
+
+document
+  .querySelectorAll(
+    "[data-action]"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const action =
+            button.dataset.action;
+
+
+          if (
+            action ===
+            "new"
+          ) {
+
+            openNew();
+
+          } else {
+
+            showView(
+              "deliveries"
+            );
+          }
+        }
+      );
+    }
+  );
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+$("searchInput")
+  .addEventListener(
+    "input",
+    renderTable
+  );
+
+
+/* =========================================================
+   STATUS FILTER
+========================================================= */
+
+$("statusFilter")
+  .addEventListener(
+    "change",
+    renderTable
+  );
+
+
+/* =========================================================
+   CLEAR FILTERS
+========================================================= */
+
+$("clearFilters")
+  .addEventListener(
+    "click",
+    () => {
+
+      $("searchInput")
+        .value = "";
+
+      $("statusFilter")
+        .value = "";
+
+      renderTable();
+    }
+  );
+
+
+/* =========================================================
+   EXPORT
+========================================================= */
+
+$("exportCsvBtn")
+  .addEventListener(
+    "click",
+    exportCsv
+  );
+
+
+/* =========================================================
+   BACKUP
+========================================================= */
+
+$("backupBtn")
+  .addEventListener(
+    "click",
+    backup
+  );
+
+
+/* =========================================================
+   RESTORE
+========================================================= */
+
+$("restoreInput")
+  .addEventListener(
+    "change",
+    event => {
+
+      const file =
+        event.target.files[0];
+
+
+      if (file) {
+
+        restoreBackup(
+          file
+        );
+      }
+
+
+      event.target.value =
+        "";
+    }
+  );
 
 
 /* =========================================================
    START APPLICATION
-   ========================================================= */
+========================================================= */
 
 async function startApp() {
 
-  console.log(
-    "Starting Al Jefoon Delivery System..."
-  );
-
-  const appShell =
+  const shell =
     document.querySelector(
       ".app-shell"
     );
 
-  if (appShell) {
 
-    appShell.style.display =
+  /* Hide application until
+     authentication is confirmed */
+
+  if (shell) {
+    shell.style.display =
       "none";
   }
 
 
-  /* Create login */
-
   createLoginScreen();
 
-
-  /* Setup buttons */
-
-  setupDeliveryForm();
-
-  setupNavigation();
-
-  setupFilters();
-
-  setupDataButtons();
-
-
-  /* Check existing login */
 
   try {
 
@@ -2291,39 +2811,33 @@ async function startApp() {
     } =
       await db.auth.getSession();
 
+
     if (error) {
-
-      console.error(
-        "Session error:",
-        error
-      );
-
-      return;
+      throw error;
     }
+
 
     const session =
       data.session;
 
-
-    /* =====================================
-       ALREADY LOGGED IN
-       ===================================== */
 
     if (session) {
 
       currentUser =
         session.user;
 
+
       $("loginScreen")
         .style
         .display =
         "none";
 
-      if (appShell) {
 
-        appShell.style.display =
+      if (shell) {
+        shell.style.display =
           "flex";
       }
+
 
       await loadDeliveries();
 
@@ -2331,14 +2845,12 @@ async function startApp() {
 
       renderDashboard();
 
-    }
+      showView(
+        "dashboard"
+      );
 
 
-    /* =====================================
-       NOT LOGGED IN
-       ===================================== */
-
-    else {
+    } else {
 
       $("loginScreen")
         .style
@@ -2346,12 +2858,14 @@ async function startApp() {
         "flex";
     }
 
+
   } catch (error) {
 
     console.error(
       "Application startup error:",
       error
     );
+
 
     if ($("loginScreen")) {
 
@@ -2363,15 +2877,63 @@ async function startApp() {
   }
 
 
-  /* Authentication listener */
+  /* =====================================================
+     AUTH STATE LISTENER
+  ===================================================== */
 
-  setupAuthListener();
+  db.auth.onAuthStateChange(
+    (event, session) => {
+
+      if (
+        event ===
+        "SIGNED_OUT"
+      ) {
+
+        currentUser =
+          null;
+
+        deliveries =
+          [];
+
+        editingId =
+          null;
+
+
+        if (shell) {
+
+          shell.style.display =
+            "none";
+        }
+
+
+        if ($("loginScreen")) {
+
+          $("loginScreen")
+            .style
+            .display =
+            "flex";
+        }
+      }
+
+
+      if (
+        event ===
+        "SIGNED_IN" &&
+        session
+      ) {
+
+        currentUser =
+          session.user;
+      }
+
+    }
+  );
 }
 
 
 /* =========================================================
-   RUN APPLICATION
-   ========================================================= */
+   RUN
+========================================================= */
 
 startApp();
 
