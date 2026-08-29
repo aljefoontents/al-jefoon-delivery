@@ -185,9 +185,11 @@ button:disabled {
 
   margin-top: 4px;
 
-  color: var(--muted);
+  color: #ffffff;
 
   font-size: 15px;
+
+  text-align: center;
 }
 
 
