@@ -1,3 +1,4 @@
+```javascript
 /* =========================================================
    AL JEFOON TENTS
    DELIVERY MANAGEMENT SYSTEM
@@ -35,6 +36,121 @@ let editingId = null;
 let currentUser = null;
 
 let loginScreenCreated = false;
+
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+const DARK_MODE_KEY =
+  "alJefoonDeliveryDarkMode";
+
+
+function applyDarkMode() {
+
+  const enabled =
+    localStorage.getItem(
+      DARK_MODE_KEY
+    ) === "true";
+
+
+  document.body.classList.toggle(
+    "dark-mode",
+    enabled
+  );
+
+
+  const button =
+    document.getElementById(
+      "darkModeToggle"
+    );
+
+  const text =
+    document.getElementById(
+      "themeToggleText"
+    );
+
+  const icon =
+    document.getElementById(
+      "themeToggleIcon"
+    );
+
+
+  if (enabled) {
+
+    if (text) {
+      text.textContent =
+        "Light Mode";
+    }
+
+    if (icon) {
+      icon.textContent =
+        "☀";
+    }
+
+    if (button) {
+      button.setAttribute(
+        "aria-label",
+        "Switch to light mode"
+      );
+    }
+
+  } else {
+
+    if (text) {
+      text.textContent =
+        "Dark Mode";
+    }
+
+    if (icon) {
+      icon.textContent =
+        "☾";
+    }
+
+    if (button) {
+      button.setAttribute(
+        "aria-label",
+        "Switch to dark mode"
+      );
+    }
+  }
+}
+
+
+function toggleDarkMode() {
+
+  const current =
+    localStorage.getItem(
+      DARK_MODE_KEY
+    ) === "true";
+
+
+  localStorage.setItem(
+    DARK_MODE_KEY,
+    String(!current)
+  );
+
+
+  applyDarkMode();
+}
+
+
+applyDarkMode();
+
+
+const darkModeButton =
+  document.getElementById(
+    "darkModeToggle"
+  );
+
+
+if (darkModeButton) {
+
+  darkModeButton.addEventListener(
+    "click",
+    toggleDarkMode
+  );
+}
 
 
 /* =========================================================
@@ -332,7 +448,7 @@ function addLogoutButton() {
     width:100%;
     margin-top:14px;
     padding:9px 12px;
-    border:1px solid #e1e1e1;
+    border:1px solid var(--border);
     border-radius:7px;
     background:#ffffff;
     color:#444;
@@ -482,7 +598,6 @@ async function loadDeliveries() {
 
 /* =========================================================
    NORMALIZE DELIVERY
-   Handles the existing database column names.
 ========================================================= */
 
 function normalizeDelivery(d) {
@@ -673,10 +788,6 @@ async function saveDelivery(formData) {
 
   try {
 
-    /* =====================================================
-       EDIT EXISTING
-    ===================================================== */
-
     if (editingId) {
 
       const {
@@ -705,10 +816,6 @@ async function saveDelivery(formData) {
       );
     }
 
-
-    /* =====================================================
-       CREATE NEW
-    ===================================================== */
 
     else {
 
@@ -2498,8 +2605,6 @@ $("deliveryForm")
       };
 
 
-      /* Browser validation */
-
       if (
         !$("deliveryForm")
           .checkValidity()
@@ -2778,79 +2883,10 @@ $("restoreInput")
     }
   );
 
-/* =========================================================
-   DARK MODE BUTTON
-========================================================= */
-
-const darkModeBtn =
-  document.getElementById(
-    "darkModeBtn"
-  );
-
-if (darkModeBtn) {
-
-  darkModeBtn.addEventListener(
-    "click",
-    toggleDarkMode
-  );
-
-}
-
-applyDarkMode();
 
 /* =========================================================
    START APPLICATION
 ========================================================= */
-
-/* =========================================================
-   DARK MODE
-========================================================= */
-
-const DARK_MODE_KEY =
-  "alJefoonDeliveryDarkMode";
-
-
-function applyDarkMode() {
-
-  const enabled =
-    localStorage.getItem(
-      DARK_MODE_KEY
-    ) === "true";
-
-  document.body.classList.toggle(
-    "dark-mode",
-    enabled
-  );
-
-  const button =
-    document.getElementById(
-      "darkModeBtn"
-    );
-
-  if (button) {
-
-    button.innerHTML =
-      enabled
-        ? '<span>☀</span><span>Light Mode</span>'
-        : '<span>☾</span><span>Dark Mode</span>';
-  }
-}
-
-
-function toggleDarkMode() {
-
-  const enabled =
-    document.body.classList.contains(
-      "dark-mode"
-    );
-
-  localStorage.setItem(
-    DARK_MODE_KEY,
-    String(!enabled)
-  );
-
-  applyDarkMode();
-}
 
 async function startApp() {
 
@@ -2860,9 +2896,6 @@ async function startApp() {
     );
 
 
-  /* Hide application until
-     authentication is confirmed */
-
   if (shell) {
     shell.style.display =
       "none";
@@ -2870,6 +2903,11 @@ async function startApp() {
 
 
   createLoginScreen();
+
+
+  /* Re-apply saved theme after login screen creation */
+
+  applyDarkMode();
 
 
   try {
@@ -3005,4 +3043,4 @@ async function startApp() {
 ========================================================= */
 
 startApp();
-
+```
