@@ -172,8 +172,8 @@ button:disabled {
 .brand-text strong {
   display: block;
 
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 40px;
+  font-weight: 600;
 
   letter-spacing: -0.2px;
 
@@ -184,7 +184,7 @@ button:disabled {
   display: block;
 
   margin-top: 4px;
-  margin-left: 10px
+  margin-left: 20px
   color: var(--muted);
 
   font-size: 15px;
