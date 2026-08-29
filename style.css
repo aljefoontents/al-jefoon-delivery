@@ -184,7 +184,7 @@ button:disabled {
   display: block;
 
   margin-top: 4px;
-  margin-left: 40px
+
   color: var(--muted);
 
   font-size: 15px;
