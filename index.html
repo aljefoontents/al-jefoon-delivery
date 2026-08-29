@@ -1,24 +1,19 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
->
-
-<meta
-name="theme-color"
-content="#FCC224"
-
->
+  <meta
+    name="theme-color"
+    content="#FCC224"
+  >
 
   <title>AL JEFOON TENTS — Delivery Management</title>
-
-  <!-- Browser Tab Icon / Pickup & Delivery Icon -->
 
   <link
     rel="icon"
@@ -33,721 +28,746 @@ content="#FCC224"
 
   <div class="app-shell">
 
-```
-<!-- SIDEBAR -->
-<aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-  <div class="brand">
+      <div class="brand">
 
-    <div class="brand-logo">
-      <img
-        src="logo.png"
-        alt="AL JEFOON TENTS"
-        class="company-logo"
-      >
-    </div>
-
-    <div class="brand-text">
-      <strong>AL JEFOON TENTS</strong>
-      <small>Delivery Management</small>
-    </div>
-
-  </div>
-
-  <nav class="sidebar-nav">
-
-    <button
-      class="nav-btn active"
-      data-view="dashboard"
-      type="button"
-    >
-      <span class="nav-icon">▦</span>
-      <span>Dashboard</span>
-    </button>
-
-    <button
-      class="nav-btn"
-      data-view="deliveries"
-      type="button"
-    >
-      <span class="nav-icon">▤</span>
-      <span>Deliveries</span>
-    </button>
-
-    <button
-      class="nav-btn"
-      data-view="new"
-      type="button"
-    >
-      <span class="nav-icon">＋</span>
-      <span>New Delivery</span>
-    </button>
-
-  </nav>
-
-  <div class="sidebar-footer">
-
-    <div class="secure-info">
-      <span class="secure-dot"></span>
-      Secure Cloud Data
-    </div>
-
-    <div class="version">
-      Delivery Management v1.0
-    </div>
-
-  </div>
-
-</aside>
-
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- TOP BAR -->
-  <header class="topbar">
-
-    <div class="page-heading">
-
-      <div class="mobile-brand">
-        <img
-          src="logo.png"
-          alt="AL JEFOON TENTS"
-        >
-      </div>
-
-      <div>
-        <h1 id="pageTitle">
-          Dashboard
-        </h1>
-
-        <p id="pageSubtitle">
-          Track deliveries, drivers and delivery status.
-        </p>
-      </div>
-
-    </div>
-
-    <button
-      class="primary top-new-btn"
-      id="topNewBtn"
-      type="button"
-    >
-      <span>＋</span>
-      New Delivery
-    </button>
-
-  </header>
-
-
-  <!-- DASHBOARD -->
-  <section
-    id="dashboardView"
-    class="view"
-  >
-
-    <!-- STAT CARDS -->
-    <div class="cards">
-
-      <div class="stat-card">
-
-        <div class="stat-icon total-icon">
-          ▤
+        <div class="brand-logo">
+          <img
+            src="logo.png"
+            alt="AL JEFOON TENTS"
+            class="company-logo"
+          >
         </div>
 
-        <div>
-          <span>Total Deliveries</span>
-          <b id="statTotal">0</b>
+        <div class="brand-text">
+          <strong>AL JEFOON TENTS</strong>
+          <small>Delivery Management</small>
         </div>
 
       </div>
 
 
-      <div class="stat-card">
-
-        <div class="stat-icon pending-icon">
-          ◷
-        </div>
-
-        <div>
-          <span>Pending</span>
-          <b id="statPending">0</b>
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-icon out-icon">
-          ➜
-        </div>
-
-        <div>
-          <span>Out for Delivery</span>
-          <b id="statOut">0</b>
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-icon delivered-icon">
-          ✓
-        </div>
-
-        <div>
-          <span>Delivered</span>
-          <b id="statDelivered">0</b>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- RECENT DELIVERIES -->
-    <div class="panel">
-
-      <div class="panel-head">
-
-        <div>
-          <h2>Recent Deliveries</h2>
-          <p>Latest delivery records.</p>
-        </div>
+      <nav class="sidebar-nav">
 
         <button
-          class="secondary"
-          id="viewAllBtn"
+          class="nav-btn active"
+          data-view="dashboard"
           type="button"
         >
-          View All
+          <span class="nav-icon">▦</span>
+          <span>Dashboard</span>
         </button>
 
-      </div>
+        <button
+          class="nav-btn"
+          data-view="deliveries"
+          type="button"
+        >
+          <span class="nav-icon">▤</span>
+          <span>Deliveries</span>
+        </button>
 
-      <div class="table-wrap">
+        <button
+          class="nav-btn"
+          data-view="new"
+          type="button"
+        >
+          <span class="nav-icon">＋</span>
+          <span>New Delivery</span>
+        </button>
 
-        <table>
-
-          <thead>
-            <tr>
-              <th>Reference</th>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Driver</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody id="recentTable"></tbody>
-
-        </table>
-
-      </div>
-
-    </div>
+      </nav>
 
 
-    <!-- DASHBOARD LOWER GRID -->
-    <div class="dashboard-grid">
+      <div class="sidebar-footer">
 
-      <!-- QUICK ACTIONS -->
-      <div class="panel">
+        <!-- DARK MODE -->
+        <button
+          type="button"
+          id="darkModeToggle"
+          class="dark-mode-toggle"
+          aria-label="Toggle dark mode"
+        >
+          <span class="dark-mode-icon" id="darkModeIcon">☾</span>
 
-        <div class="panel-head">
+          <span class="dark-mode-label">
+            <span id="darkModeText">Dark Mode</span>
+          </span>
 
-          <div>
-            <h2>Quick Actions</h2>
-            <p>Common delivery tasks.</p>
-          </div>
+          <span class="dark-mode-switch">
+            <span class="dark-mode-switch-knob"></span>
+          </span>
+        </button>
 
+
+        <div class="secure-info">
+          <span class="secure-dot"></span>
+          Secure Cloud Data
         </div>
 
-        <div class="quick-actions">
+        <div class="version">
+          Delivery Management v1.0
+        </div>
 
-          <button
-            class="quick"
-            data-action="new"
-            type="button"
-          >
-            <span class="quick-icon">＋</span>
-            <span>Create Delivery</span>
-          </button>
+      </div>
 
-          <button
-            class="quick"
-            data-action="deliveries"
-            type="button"
-          >
-            <span class="quick-icon">▤</span>
-            <span>Search Deliveries</span>
-          </button>
+    </aside>
 
-          <button
-            class="quick"
-            id="exportCsvBtn"
-            type="button"
-          >
-            <span class="quick-icon">⇩</span>
-            <span>Export CSV</span>
-          </button>
 
-          <button
-            class="quick"
-            id="backupBtn"
-            type="button"
-          >
-            <span class="quick-icon">◫</span>
-            <span>Backup Data</span>
-          </button>
+    <!-- MAIN -->
+    <main class="main">
 
-          <label class="quick file-label">
+      <!-- TOP BAR -->
+      <header class="topbar">
 
-            <span class="quick-icon">⇧</span>
-            <span>Restore Backup</span>
+        <div class="page-heading">
 
-            <input
-              type="file"
-              id="restoreInput"
-              accept=".json"
+          <div class="mobile-brand">
+            <img
+              src="logo.png"
+              alt="AL JEFOON TENTS"
             >
-
-          </label>
-
-        </div>
-
-      </div>
-
-
-      <!-- STATUS -->
-      <div class="panel">
-
-        <div class="panel-head">
+          </div>
 
           <div>
-            <h2>Status Overview</h2>
-            <p>Current delivery workload.</p>
+
+            <h1 id="pageTitle">
+              Dashboard
+            </h1>
+
+            <p id="pageSubtitle">
+              Track deliveries, drivers and delivery status.
+            </p>
+
           </div>
 
         </div>
 
-        <div
-          id="statusOverview"
-          class="status-overview"
-        ></div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- DELIVERIES -->
-  <section
-    id="deliveriesView"
-    class="view hidden"
-  >
-
-    <div class="panel">
-
-      <div class="panel-head deliveries-head">
-
-        <div>
-          <h2>All Deliveries</h2>
-          <p>Search, edit, print or delete delivery records.</p>
-        </div>
 
         <button
-          class="primary"
-          id="tableNewBtn"
+          class="primary top-new-btn"
+          id="topNewBtn"
           type="button"
         >
-          ＋ New Delivery
+          <span>＋</span>
+          New Delivery
         </button>
 
-      </div>
+      </header>
 
 
-      <div class="toolbar">
-
-        <div class="search-box">
-
-          <span>⌕</span>
-
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search reference, customer, driver, phone..."
-          >
-
-        </div>
-
-
-        <select id="statusFilter">
-
-          <option value="">All statuses</option>
-
-          <option value="Pending">
-            Pending
-          </option>
-
-          <option value="Out for Delivery">
-            Out for Delivery
-          </option>
-
-          <option value="Delivered">
-            Delivered
-          </option>
-
-          <option value="Cancelled">
-            Cancelled
-          </option>
-
-        </select>
-
-
-        <button
-          class="secondary"
-          id="clearFilters"
-          type="button"
-        >
-          Clear
-        </button>
-
-      </div>
-
-
-      <div class="table-wrap">
-
-        <table>
-
-          <thead>
-
-            <tr>
-              <th>Reference</th>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Driver</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-
-          </thead>
-
-          <tbody id="allTable"></tbody>
-
-        </table>
-
-      </div>
-
-
-      <div
-        id="emptyState"
-        class="empty hidden"
+      <!-- DASHBOARD -->
+      <section
+        id="dashboardView"
+        class="view"
       >
-        No delivery records found.
-      </div>
 
-    </div>
+        <!-- STAT CARDS -->
+        <div class="cards">
 
-  </section>
+          <div class="stat-card">
 
+            <div class="stat-icon total-icon">
+              ▤
+            </div>
 
-  <!-- NEW / EDIT DELIVERY -->
-  <section
-    id="newView"
-    class="view hidden"
-  >
+            <div>
+              <span>Total Deliveries</span>
+              <b id="statTotal">0</b>
+            </div>
 
-    <form
-      id="deliveryForm"
-      class="panel form-panel"
-    >
-
-      <div class="form-header">
-
-        <div>
-
-          <div class="section-label">
-            DELIVERY INFORMATION
           </div>
 
-          <h2 id="formTitle">
-            Create New Delivery
-          </h2>
 
-          <p>
-            Enter the delivery details below.
-          </p>
+          <div class="stat-card">
+
+            <div class="stat-icon pending-icon">
+              ◷
+            </div>
+
+            <div>
+              <span>Pending</span>
+              <b id="statPending">0</b>
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-icon out-icon">
+              ➜
+            </div>
+
+            <div>
+              <span>Out for Delivery</span>
+              <b id="statOut">0</b>
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-icon delivered-icon">
+              ✓
+            </div>
+
+            <div>
+              <span>Delivered</span>
+              <b id="statDelivered">0</b>
+            </div>
+
+          </div>
 
         </div>
 
-        <div class="reference-box">
 
-          <span>REFERENCE</span>
+        <!-- RECENT DELIVERIES -->
+        <div class="panel">
 
-          <strong id="refPreview">
-            Generating...
-          </strong>
+          <div class="panel-head">
+
+            <div>
+              <h2>Recent Deliveries</h2>
+              <p>Latest delivery records.</p>
+            </div>
+
+            <button
+              class="secondary"
+              id="viewAllBtn"
+              type="button"
+            >
+              View All
+            </button>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Driver</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="recentTable"></tbody>
+
+            </table>
+
+          </div>
 
         </div>
 
-      </div>
+
+        <!-- DASHBOARD LOWER GRID -->
+        <div class="dashboard-grid">
+
+          <!-- QUICK ACTIONS -->
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <div>
+                <h2>Quick Actions</h2>
+                <p>Common delivery tasks.</p>
+              </div>
+
+            </div>
 
 
-      <div class="form-divider"></div>
+            <div class="quick-actions">
+
+              <button
+                class="quick"
+                data-action="new"
+                type="button"
+              >
+                <span class="quick-icon">＋</span>
+                <span>Create Delivery</span>
+              </button>
 
 
-      <input
-        type="hidden"
-        id="editingId"
+              <button
+                class="quick"
+                data-action="deliveries"
+                type="button"
+              >
+                <span class="quick-icon">▤</span>
+                <span>Search Deliveries</span>
+              </button>
+
+
+              <button
+                class="quick"
+                id="exportCsvBtn"
+                type="button"
+              >
+                <span class="quick-icon">⇩</span>
+                <span>Export CSV</span>
+              </button>
+
+
+              <button
+                class="quick"
+                id="backupBtn"
+                type="button"
+              >
+                <span class="quick-icon">◫</span>
+                <span>Backup Data</span>
+              </button>
+
+
+              <label class="quick file-label">
+
+                <span class="quick-icon">⇧</span>
+                <span>Restore Backup</span>
+
+                <input
+                  type="file"
+                  id="restoreInput"
+                  accept=".json"
+                >
+
+              </label>
+
+            </div>
+
+          </div>
+
+
+          <!-- STATUS -->
+          <div class="panel">
+
+            <div class="panel-head">
+
+              <div>
+                <h2>Status Overview</h2>
+                <p>Current delivery workload.</p>
+              </div>
+
+            </div>
+
+
+            <div
+              id="statusOverview"
+              class="status-overview"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DELIVERIES -->
+      <section
+        id="deliveriesView"
+        class="view hidden"
       >
 
+        <div class="panel">
 
-      <div class="form-grid">
+          <div class="panel-head deliveries-head">
 
-        <!-- DATE -->
-        <label>
+            <div>
+              <h2>All Deliveries</h2>
+              <p>Search, edit, print or delete delivery records.</p>
+            </div>
 
-          <span>
-            Delivery Date <em>*</em>
-          </span>
+            <button
+              class="primary"
+              id="tableNewBtn"
+              type="button"
+            >
+              ＋ New Delivery
+            </button>
+
+          </div>
+
+
+          <div class="toolbar">
+
+            <div class="search-box">
+
+              <span>⌕</span>
+
+              <input
+                id="searchInput"
+                type="search"
+                placeholder="Search reference, customer, driver, phone..."
+              >
+
+            </div>
+
+
+            <select id="statusFilter">
+
+              <option value="">All statuses</option>
+
+              <option value="Pending">
+                Pending
+              </option>
+
+              <option value="Out for Delivery">
+                Out for Delivery
+              </option>
+
+              <option value="Delivered">
+                Delivered
+              </option>
+
+              <option value="Cancelled">
+                Cancelled
+              </option>
+
+            </select>
+
+
+            <button
+              class="secondary"
+              id="clearFilters"
+              type="button"
+            >
+              Clear
+            </button>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table>
+
+              <thead>
+
+                <tr>
+                  <th>Reference</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Driver</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+
+              </thead>
+
+              <tbody id="allTable"></tbody>
+
+            </table>
+
+          </div>
+
+
+          <div
+            id="emptyState"
+            class="empty hidden"
+          >
+            No delivery records found.
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- NEW / EDIT DELIVERY -->
+      <section
+        id="newView"
+        class="view hidden"
+      >
+
+        <form
+          id="deliveryForm"
+          class="panel form-panel"
+        >
+
+          <div class="form-header">
+
+            <div>
+
+              <div class="section-label">
+                DELIVERY INFORMATION
+              </div>
+
+              <h2 id="formTitle">
+                Create New Delivery
+              </h2>
+
+              <p>
+                Enter the delivery details below.
+              </p>
+
+            </div>
+
+
+            <div class="reference-box">
+
+              <span>REFERENCE</span>
+
+              <strong id="refPreview">
+                Generating...
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-divider"></div>
+
 
           <input
-            id="deliveryDate"
-            type="date"
-            required
+            type="hidden"
+            id="editingId"
           >
 
-        </label>
+
+          <div class="form-grid">
+
+            <!-- DATE -->
+            <label>
+
+              <span>
+                Delivery Date <em>*</em>
+              </span>
+
+              <input
+                id="deliveryDate"
+                type="date"
+                required
+              >
+
+            </label>
 
 
-        <!-- STATUS -->
-        <label>
+            <!-- STATUS -->
+            <label>
 
-          <span>
-            Status <em>*</em>
-          </span>
+              <span>
+                Status <em>*</em>
+              </span>
 
-          <select
-            id="status"
-            required
-          >
+              <select
+                id="status"
+                required
+              >
 
-            <option value="Pending">
-              Pending
-            </option>
+                <option value="Pending">
+                  Pending
+                </option>
 
-            <option value="Out for Delivery">
-              Out for Delivery
-            </option>
+                <option value="Out for Delivery">
+                  Out for Delivery
+                </option>
 
-            <option value="Delivered">
-              Delivered
-            </option>
+                <option value="Delivered">
+                  Delivered
+                </option>
 
-            <option value="Cancelled">
-              Cancelled
-            </option>
+                <option value="Cancelled">
+                  Cancelled
+                </option>
 
-          </select>
+              </select>
 
-        </label>
-
-
-        <!-- CUSTOMER -->
-        <label>
-
-          <span>
-            Customer / Company <em>*</em>
-          </span>
-
-          <input
-            id="customer"
-            type="text"
-            required
-            placeholder="Customer or company name"
-          >
-
-        </label>
+            </label>
 
 
-        <!-- PHONE -->
-        <label>
+            <!-- CUSTOMER -->
+            <label>
 
-          <span>
-            Contact Number
-          </span>
+              <span>
+                Customer / Company <em>*</em>
+              </span>
 
-          <input
-            id="phone"
-            type="tel"
-            placeholder="+971 XX XXX XXXX"
-          >
+              <input
+                id="customer"
+                type="text"
+                required
+                placeholder="Customer or company name"
+              >
 
-        </label>
-
-
-        <!-- ADDRESS -->
-        <label class="wide">
-
-          <span>
-            Delivery Address
-          </span>
-
-          <textarea
-            id="address"
-            rows="3"
-            placeholder="Full delivery location, building, area, site details..."
-          ></textarea>
-
-        </label>
+            </label>
 
 
-        <!-- DRIVER -->
-        <label>
+            <!-- PHONE -->
+            <label>
 
-          <span>
-            Driver
-          </span>
+              <span>
+                Contact Number
+              </span>
 
-          <input
-            id="driver"
-            type="text"
-            placeholder="Driver name"
-          >
+              <input
+                id="phone"
+                type="tel"
+                placeholder="+971 XX XXX XXXX"
+              >
 
-        </label>
-
-
-        <!-- VEHICLE -->
-        <label>
-
-          <span>
-            Vehicle / Plate Number
-          </span>
-
-          <input
-            id="vehicle"
-            type="text"
-            placeholder="Vehicle number / plate"
-          >
-
-        </label>
+            </label>
 
 
-        <!-- EXPECTED TIME -->
-        <label>
+            <!-- ADDRESS -->
+            <label class="wide">
 
-          <span>
-            Expected Delivery Time
-          </span>
+              <span>
+                Delivery Address
+              </span>
 
-          <input
-            id="expectedTime"
-            type="time"
-          >
+              <textarea
+                id="address"
+                rows="3"
+                placeholder="Full delivery location, building, area, site details..."
+              ></textarea>
 
-        </label>
+            </label>
 
 
-        <!-- ITEMS -->
-        <label class="wide">
+            <!-- DRIVER -->
+            <label>
 
-          <span>
-            Items / Equipment <em>*</em>
-          </span>
+              <span>
+                Driver
+              </span>
 
-          <textarea
-            id="items"
-            rows="6"
-            required
-            placeholder="Example:
-```
+              <input
+                id="driver"
+                type="text"
+                placeholder="Driver name"
+              >
 
+            </label>
+
+
+            <!-- VEHICLE -->
+            <label>
+
+              <span>
+                Vehicle / Plate Number
+              </span>
+
+              <input
+                id="vehicle"
+                type="text"
+                placeholder="Vehicle number / plate"
+              >
+
+            </label>
+
+
+            <!-- EXPECTED TIME -->
+            <label>
+
+              <span>
+                Expected Delivery Time
+              </span>
+
+              <input
+                id="expectedTime"
+                type="time"
+              >
+
+            </label>
+
+
+            <!-- ITEMS -->
+            <label class="wide">
+
+              <span>
+                Items / Equipment <em>*</em>
+              </span>
+
+              <textarea
+                id="items"
+                rows="6"
+                required
+                placeholder="Example:
 10 x Chiavari Chairs
 2 x 5x5m Tents
 1 x Tower AC
 1 x Table"
-></textarea>
+              ></textarea>
 
-```
-          <small>
-            Enter each item or equipment on a separate line.
-          </small>
+              <small>
+                Enter each item or equipment on a separate line.
+              </small>
 
-        </label>
-
-
-        <!-- NOTES -->
-        <label class="wide">
-
-          <span>
-            Notes / Special Instructions
-          </span>
-
-          <textarea
-            id="notes"
-            rows="4"
-            placeholder="Site contact, installation instructions, collection details, special requirements..."
-          ></textarea>
-
-        </label>
-
-      </div>
+            </label>
 
 
-      <!-- FORM ACTIONS -->
-      <div class="form-actions">
+            <!-- NOTES -->
+            <label class="wide">
 
-        <button
-          type="button"
-          class="secondary"
-          id="cancelForm"
-        >
-          Cancel
-        </button>
+              <span>
+                Notes / Special Instructions
+              </span>
 
-        <button
-          type="submit"
-          class="primary save-btn"
-          id="saveDeliveryBtn"
-        >
-          <span>✓</span>
-          Save Delivery
-        </button>
+              <textarea
+                id="notes"
+                rows="4"
+                placeholder="Site contact, installation instructions, collection details, special requirements..."
+              ></textarea>
 
-      </div>
+            </label>
 
-    </form>
+          </div>
 
-  </section>
 
-</main>
-```
+          <!-- FORM ACTIONS -->
+          <div class="form-actions">
+
+            <button
+              type="button"
+              class="secondary"
+              id="cancelForm"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="primary save-btn"
+              id="saveDeliveryBtn"
+            >
+              <span>✓</span>
+              Save Delivery
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+    </main>
 
   </div>
 
-  <!-- TOAST -->
 
+  <!-- TOAST -->
   <div
     id="toast"
     class="toast"
   ></div>
 
-  <!-- SUPABASE -->
 
+  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- APPLICATION -->
-
   <script src="app.js"></script>
 
 </body>
 </html>
-
