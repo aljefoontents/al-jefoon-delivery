@@ -2778,10 +2778,79 @@ $("restoreInput")
     }
   );
 
+/* =========================================================
+   DARK MODE BUTTON
+========================================================= */
+
+const darkModeBtn =
+  document.getElementById(
+    "darkModeBtn"
+  );
+
+if (darkModeBtn) {
+
+  darkModeBtn.addEventListener(
+    "click",
+    toggleDarkMode
+  );
+
+}
+
+applyDarkMode();
 
 /* =========================================================
    START APPLICATION
 ========================================================= */
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+const DARK_MODE_KEY =
+  "alJefoonDeliveryDarkMode";
+
+
+function applyDarkMode() {
+
+  const enabled =
+    localStorage.getItem(
+      DARK_MODE_KEY
+    ) === "true";
+
+  document.body.classList.toggle(
+    "dark-mode",
+    enabled
+  );
+
+  const button =
+    document.getElementById(
+      "darkModeBtn"
+    );
+
+  if (button) {
+
+    button.innerHTML =
+      enabled
+        ? '<span>☀</span><span>Light Mode</span>'
+        : '<span>☾</span><span>Dark Mode</span>';
+  }
+}
+
+
+function toggleDarkMode() {
+
+  const enabled =
+    document.body.classList.contains(
+      "dark-mode"
+    );
+
+  localStorage.setItem(
+    DARK_MODE_KEY,
+    String(!enabled)
+  );
+
+  applyDarkMode();
+}
 
 async function startApp() {
 
