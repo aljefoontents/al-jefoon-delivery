@@ -1,6 +1,7 @@
 /* =========================================================
    AL JEFOON TENTS
    DELIVERY MANAGEMENT SYSTEM
+   PASSWORD-FREE VERSION
 ========================================================= */
 
 
@@ -17,6 +18,7 @@ const SUPABASE_KEY =
 
 const { createClient } = window.supabase;
 
+
 const db =
   createClient(
     SUPABASE_URL,
@@ -31,10 +33,6 @@ const db =
 let deliveries = [];
 
 let editingId = null;
-
-let currentUser = null;
-
-let loginScreenCreated = false;
 
 
 /* =========================================================
@@ -73,364 +71,10 @@ function escapeHtml(value = "") {
 
 
 /* =========================================================
-   LOGIN SCREEN
-========================================================= */
-
-function createLoginScreen() {
-
-  if ($("loginScreen")) {
-    return;
-  }
-
-  const screen =
-    document.createElement("div");
-
-  screen.id =
-    "loginScreen";
-
-  screen.innerHTML = `
-
-    <div class="login-background">
-      <div class="login-circle"></div>
-    </div>
-
-    <div class="login-card">
-
-      <div class="login-logo">
-        <img
-          src="logo.png"
-          alt="AL JEFOON TENTS"
-        >
-      </div>
-
-      <div class="login-heading">
-
-        <h1>
-          AL JEFOON TENTS
-        </h1>
-
-        <p>
-          Delivery Management System
-        </p>
-
-      </div>
-
-      <form
-        id="loginForm"
-        class="login-form"
-      >
-
-        <label>
-
-          <span>
-            Email
-          </span>
-
-          <input
-            id="loginEmail"
-            type="email"
-            required
-            autocomplete="username"
-            placeholder="Enter your email"
-          >
-
-        </label>
-
-
-        <label>
-
-          <span>
-            Password
-          </span>
-
-          <input
-            id="loginPassword"
-            type="password"
-            required
-            autocomplete="current-password"
-            placeholder="Enter your password"
-          >
-
-        </label>
-
-
-        <div
-          id="loginError"
-          class="login-error"
-        ></div>
-
-
-        <button
-          type="submit"
-          id="loginButton"
-          class="login-button"
-        >
-          Sign In
-        </button>
-
-      </form>
-
-    </div>
-  `;
-
-  document.body.appendChild(screen);
-
-  loginScreenCreated = true;
-
-  $("loginForm")
-    .addEventListener(
-      "submit",
-      login
-    );
-}
-
-
-/* =========================================================
-   LOGIN
-========================================================= */
-
-async function login(event) {
-
-  event.preventDefault();
-
-  const email =
-    $("loginEmail")
-      .value
-      .trim();
-
-  const password =
-    $("loginPassword")
-      .value;
-
-  const button =
-    $("loginButton");
-
-  const errorBox =
-    $("loginError");
-
-  errorBox.style.display =
-    "none";
-
-  button.disabled = true;
-
-  button.textContent =
-    "Signing in...";
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await db.auth.signInWithPassword({
-        email,
-        password
-      });
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    currentUser =
-      data.user;
-
-
-    if ($("loginScreen")) {
-      $("loginScreen")
-        .style
-        .display = "none";
-    }
-
-
-    const shell =
-      document.querySelector(
-        ".app-shell"
-      );
-
-    if (shell) {
-      shell.style.display =
-        "flex";
-    }
-
-
-    await loadDeliveries();
-
-    addLogoutButton();
-
-    renderDashboard();
-
-    showView("dashboard");
-
-
-  } catch (error) {
-
-    console.error(
-      "Login error:",
-      error
-    );
-
-    errorBox.textContent =
-      error.message ||
-      "Unable to sign in.";
-
-    errorBox.style.display =
-      "block";
-
-  } finally {
-
-    button.disabled =
-      false;
-
-    button.textContent =
-      "Sign In";
-  }
-}
-
-
-/* =========================================================
-   LOGOUT BUTTON
-========================================================= */
-
-function addLogoutButton() {
-
-  const footer =
-    document.querySelector(
-      ".sidebar-footer"
-    );
-
-  if (!footer) {
-    return;
-  }
-
-
-  const existing =
-    $("logoutButton");
-
-  if (existing) {
-    existing.remove();
-  }
-
-
-  const logout =
-    document.createElement(
-      "button"
-    );
-
-  logout.id =
-    "logoutButton";
-
-  logout.type =
-    "button";
-
-  logout.textContent =
-    "Sign Out";
-
-
-  logout.style.cssText = `
-    width:100%;
-    margin-top:14px;
-    padding:9px 12px;
-    border:1px solid #e1e1e1;
-    border-radius:7px;
-    background:#ffffff;
-    color:#444;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
-  `;
-
-
-  logout.onclick =
-    logoutUser;
-
-
-  footer.appendChild(logout);
-}
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logoutUser() {
-
-  try {
-
-    await db.auth.signOut();
-
-  } catch (error) {
-
-    console.error(
-      "Logout error:",
-      error
-    );
-
-  } finally {
-
-    currentUser = null;
-
-    deliveries = [];
-
-    editingId = null;
-
-
-    const shell =
-      document.querySelector(
-        ".app-shell"
-      );
-
-    if (shell) {
-      shell.style.display =
-        "none";
-    }
-
-
-    if ($("logoutButton")) {
-      $("logoutButton").remove();
-    }
-
-
-    if ($("loginScreen")) {
-
-      $("loginScreen")
-        .style
-        .display = "flex";
-
-
-      $("loginEmail").value =
-        "";
-
-      $("loginPassword").value =
-        "";
-
-      $("loginError")
-        .style
-        .display = "none";
-
-
-      $("loginButton")
-        .disabled = false;
-
-      $("loginButton")
-        .textContent =
-        "Sign In";
-    }
-  }
-}
-
-
-/* =========================================================
    LOAD DELIVERIES
 ========================================================= */
 
 async function loadDeliveries() {
-
-  if (!currentUser) {
-    return false;
-  }
-
 
   try {
 
@@ -441,10 +85,6 @@ async function loadDeliveries() {
       await db
         .from("deliveries")
         .select("*")
-        .eq(
-          "user_id",
-          currentUser.id
-        )
         .order(
           "created_at",
           {
@@ -461,6 +101,7 @@ async function loadDeliveries() {
     deliveries =
       data || [];
 
+
     return true;
 
 
@@ -471,9 +112,11 @@ async function loadDeliveries() {
       error
     );
 
+
     toast(
       "Unable to load deliveries."
     );
+
 
     return false;
   }
@@ -545,10 +188,6 @@ function normalizeDelivery(d) {
 
     updated_at:
       d.updated_at ||
-      null,
-
-    user_id:
-      d.user_id ||
       null
   };
 }
@@ -624,16 +263,6 @@ async function nextRef() {
 
 async function saveDelivery(formData) {
 
-  if (!currentUser) {
-
-    toast(
-      "Please sign in first."
-    );
-
-    return false;
-  }
-
-
   const payload = {
 
     delivery_date:
@@ -688,10 +317,6 @@ async function saveDelivery(formData) {
           .eq(
             "id",
             editingId
-          )
-          .eq(
-            "user_id",
-            currentUser.id
           );
 
 
@@ -722,9 +347,6 @@ async function saveDelivery(formData) {
 
         reference_number:
           reference,
-
-        user_id:
-          currentUser.id,
 
         created_at:
           new Date().toISOString()
@@ -765,20 +387,11 @@ async function saveDelivery(formData) {
     );
 
 
-    let message =
-      "Unable to save delivery.";
+    toast(
+      error.message ||
+      "Unable to save delivery."
+    );
 
-
-    if (
-      error &&
-      error.message
-    ) {
-      message =
-        error.message;
-    }
-
-
-    toast(message);
 
     return false;
   }
@@ -790,11 +403,6 @@ async function saveDelivery(formData) {
 ========================================================= */
 
 async function deleteDelivery(id) {
-
-  if (!currentUser) {
-    return;
-  }
-
 
   const raw =
     deliveries.find(
@@ -833,10 +441,6 @@ async function deleteDelivery(id) {
         .eq(
           "id",
           id
-        )
-        .eq(
-          "user_id",
-          currentUser.id
         );
 
 
@@ -887,6 +491,7 @@ function badge(status) {
     status ===
     "Out for Delivery"
   ) {
+
     className =
       "out";
   }
@@ -895,6 +500,7 @@ function badge(status) {
     status ===
     "Delivered"
   ) {
+
     className =
       "delivered";
   }
@@ -903,6 +509,7 @@ function badge(status) {
     status ===
     "Cancelled"
   ) {
+
     className =
       "cancelled";
   }
@@ -996,6 +603,7 @@ function showView(name) {
     name ===
     "dashboard"
   ) {
+
     renderDashboard();
   }
 
@@ -1004,6 +612,7 @@ function showView(name) {
     name ===
     "deliveries"
   ) {
+
     renderTable();
   }
 }
@@ -1270,6 +879,7 @@ function renderDashboard() {
           </td>
 
         </tr>
+
       `;
 
 
@@ -2115,6 +1725,7 @@ function exportCsv() {
   a.href =
     url;
 
+
   a.download =
     "al-jefoon-deliveries.csv";
 
@@ -2180,6 +1791,7 @@ function backup() {
   a.href =
     url;
 
+
   a.download =
     `ajt-delivery-backup-${new Date()
       .toISOString()
@@ -2213,16 +1825,6 @@ function backup() {
 
 async function restoreBackup(file) {
 
-  if (!currentUser) {
-
-    toast(
-      "Please sign in first."
-    );
-
-    return;
-  }
-
-
   try {
 
     const data =
@@ -2234,6 +1836,7 @@ async function restoreBackup(file) {
     if (
       !Array.isArray(data)
     ) {
+
       throw new Error(
         "Backup must contain an array."
       );
@@ -2318,9 +1921,6 @@ async function restoreBackup(file) {
             notes:
               item.notes ||
               null,
-
-            user_id:
-              currentUser.id,
 
             created_at:
               new Date()
@@ -2434,18 +2034,6 @@ $("deliveryForm")
         $("saveDeliveryBtn");
 
 
-      if (
-        !currentUser
-      ) {
-
-        toast(
-          "Please sign in first."
-        );
-
-        return;
-      }
-
-
       const data = {
 
         date:
@@ -2515,6 +2103,7 @@ $("deliveryForm")
       button.disabled =
         true;
 
+
       button.innerHTML =
         "<span>⏳</span> Saving...";
 
@@ -2549,6 +2138,7 @@ $("deliveryForm")
 
         button.disabled =
           false;
+
 
         button.innerHTML =
           "<span>✓</span> Save Delivery";
@@ -2643,6 +2233,7 @@ $("cancelForm")
       editingId =
         null;
 
+
       showView(
         "dashboard"
       );
@@ -2722,8 +2313,10 @@ $("clearFilters")
       $("searchInput")
         .value = "";
 
+
       $("statusFilter")
         .value = "";
+
 
       renderTable();
     }
@@ -2785,78 +2378,25 @@ $("restoreInput")
 
 async function startApp() {
 
-  const shell =
-    document.querySelector(
-      ".app-shell"
-    );
-
-
-  /* Hide application until
-     authentication is confirmed */
-
-  if (shell) {
-    shell.style.display =
-      "none";
-  }
-
-
-  createLoginScreen();
-
-
   try {
 
-    const {
-      data,
-      error
-    } =
-      await db.auth.getSession();
+    /*
+      No authentication.
+      No email.
+      No password.
+      The application opens directly.
+    */
 
 
-    if (error) {
-      throw error;
-    }
+    await loadDeliveries();
 
 
-    const session =
-      data.session;
+    renderDashboard();
 
 
-    if (session) {
-
-      currentUser =
-        session.user;
-
-
-      $("loginScreen")
-        .style
-        .display =
-        "none";
-
-
-      if (shell) {
-        shell.style.display =
-          "flex";
-      }
-
-
-      await loadDeliveries();
-
-      addLogoutButton();
-
-      renderDashboard();
-
-      showView(
-        "dashboard"
-      );
-
-
-    } else {
-
-      $("loginScreen")
-        .style
-        .display =
-        "flex";
-    }
+    showView(
+      "dashboard"
+    );
 
 
   } catch (error) {
@@ -2867,67 +2407,10 @@ async function startApp() {
     );
 
 
-    if ($("loginScreen")) {
-
-      $("loginScreen")
-        .style
-        .display =
-        "flex";
-    }
+    toast(
+      "Unable to start application."
+    );
   }
-
-
-  /* =====================================================
-     AUTH STATE LISTENER
-  ===================================================== */
-
-  db.auth.onAuthStateChange(
-    (event, session) => {
-
-      if (
-        event ===
-        "SIGNED_OUT"
-      ) {
-
-        currentUser =
-          null;
-
-        deliveries =
-          [];
-
-        editingId =
-          null;
-
-
-        if (shell) {
-
-          shell.style.display =
-            "none";
-        }
-
-
-        if ($("loginScreen")) {
-
-          $("loginScreen")
-            .style
-            .display =
-            "flex";
-        }
-      }
-
-
-      if (
-        event ===
-        "SIGNED_IN" &&
-        session
-      ) {
-
-        currentUser =
-          session.user;
-      }
-
-    }
-  );
 }
 
 
@@ -2936,4 +2419,3 @@ async function startApp() {
 ========================================================= */
 
 startApp();
-
