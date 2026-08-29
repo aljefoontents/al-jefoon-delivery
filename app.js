@@ -1,2144 +1,1158 @@
-/* =========================================================
-   AL JEFOON TENTS
-   DELIVERY MANAGEMENT SYSTEM
-   LOCAL STORAGE VERSION
-========================================================= */
+:root {
+  --brand: #FCC224;
+  --brand-dark: #d9a300;
+  --brand-light: #fff7d6;
 
+  --black: #111111;
+  --text: #1d1d1f;
+  --muted: #737373;
 
-/* =========================================================
-   LOCAL STORAGE
-========================================================= */
+  --bg: #f5f6f8;
+  --white: #ffffff;
 
-const STORAGE_KEY =
-  "alJefoonDeliveryManagementV1";
+  --border: #e5e5e5;
+  --border-dark: #d5d5d5;
 
+  --green: #16834b;
+  --green-bg: #e9f8ef;
 
-/* =========================================================
-   APPLICATION STATE
-========================================================= */
+  --orange: #c87500;
+  --orange-bg: #fff3dc;
 
-let deliveries = [];
+  --red: #c62828;
+  --red-bg: #fff0f0;
 
-let editingId = null;
+  --blue: #2563eb;
+  --blue-bg: #edf4ff;
 
+  --sidebar-width: 260px;
 
-/* =========================================================
-   HELPERS
-========================================================= */
+  --shadow-sm:
+    0 2px 8px rgba(0, 0, 0, 0.05);
 
-const $ = id =>
-  document.getElementById(id);
+  --shadow:
+    0 8px 25px rgba(0, 0, 0, 0.07);
 
-
-const views = {
-  dashboard: $("dashboardView"),
-  deliveries: $("deliveriesView"),
-  new: $("newView")
-};
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHtml(value = "") {
-
-  return String(value)
-    .replace(
-      /[&<>"']/g,
-      character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[character])
-    );
+  --radius: 12px;
 }
 
 
 /* =========================================================
-   LOAD DELIVERIES FROM LOCAL STORAGE
+   RESET
 ========================================================= */
 
-function loadDeliveries() {
+* {
+  box-sizing: border-box;
+}
 
-  try {
+html {
+  min-height: 100%;
+}
 
-    const saved =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
+body {
+  margin: 0;
+  min-height: 100vh;
 
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 
-    if (!saved) {
+  background: var(--bg);
+  color: var(--text);
 
-      deliveries = [];
+  -webkit-font-smoothing: antialiased;
 
-      return true;
-    }
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
 
-    const data =
-      JSON.parse(
-        saved
-      );
+button {
+  cursor: pointer;
+}
 
-
-    if (
-      Array.isArray(data)
-    ) {
-
-      deliveries =
-        data;
-
-    } else {
-
-      deliveries = [];
-    }
-
-
-    return true;
-
-
-  } catch (error) {
-
-    console.error(
-      "Load deliveries error:",
-      error
-    );
-
-
-    deliveries = [];
-
-
-    toast(
-      "Unable to load saved deliveries."
-    );
-
-
-    return false;
-  }
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 
 /* =========================================================
-   SAVE DELIVERIES TO LOCAL STORAGE
+   APP SHELL
 ========================================================= */
 
-function saveDeliveries() {
-
-  try {
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(
-        deliveries
-      )
-    );
-
-
-    return true;
-
-
-  } catch (error) {
-
-    console.error(
-      "Save deliveries error:",
-      error
-    );
-
-
-    toast(
-      "Unable to save delivery data."
-    );
-
-
-    return false;
-  }
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
 }
 
 
 /* =========================================================
-   NORMALIZE DELIVERY
+   SIDEBAR
 ========================================================= */
 
-function normalizeDelivery(d) {
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
 
-  return {
+  width: var(--sidebar-width);
 
-    id:
-      d.id,
+  display: flex;
+  flex-direction: column;
 
-    reference:
-      d.reference_number ||
-      d.reference ||
-      "",
+  background: #ffffff;
 
-    date:
-      d.delivery_date ||
-      d.date ||
-      "",
+  border-right: 1px solid var(--border);
 
-    status:
-      d.status ||
-      "Pending",
+  z-index: 100;
 
-    customer:
-      d.customer_name ||
-      d.customer ||
-      "",
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
 
-    phone:
-      d.phone ||
-      "",
 
-    address:
-      d.address ||
-      "",
+/* BRAND */
 
-    driver:
-      d.driver ||
-      "",
+.brand {
+  display: flex;
+  align-items: center;
 
-    vehicle:
-      d.vehicle ||
-      "",
+  gap: 12px;
 
-    expected_time:
-      d.expected_time ||
-      "",
+  padding: 24px 20px;
 
-    items:
-      d.items ||
-      "",
+  border-bottom: 1px solid var(--border);
+}
 
-    notes:
-      d.notes ||
-      "",
+.brand-logo {
+  width: 48px;
+  height: 48px;
 
-    created_at:
-      d.created_at ||
-      null,
+  flex: 0 0 48px;
 
-    updated_at:
-      d.updated_at ||
-      null
-  };
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: var(--brand);
+
+  box-shadow:
+    0 4px 12px rgba(252, 194, 36, 0.25);
+}
+
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.brand-text {
+  min-width: 0;
+}
+
+.brand-text strong {
+  display: block;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  letter-spacing: -0.2px;
+
+  color: var(--black);
+}
+
+.brand-text small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+
+/* NAVIGATION */
+
+.sidebar-nav {
+  padding: 18px 12px;
+}
+
+.nav-btn {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  margin-bottom: 6px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: #555;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-align: left;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.nav-btn:hover {
+  background: #f7f7f7;
+  color: var(--black);
+}
+
+.nav-btn.active {
+  background: var(--brand);
+  color: #111111;
+
+  box-shadow:
+    0 4px 12px rgba(252, 194, 36, 0.2);
+}
+
+.nav-icon {
+  width: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+/* SIDEBAR FOOTER */
+
+.sidebar-footer {
+  margin-top: auto;
+
+  padding: 18px;
+
+  border-top: 1px solid var(--border);
+
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+.secure-info {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  font-weight: 600;
+
+  color: #555;
+}
+
+.secure-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--green);
+}
+
+.version {
+  margin-top: 6px;
 }
 
 
 /* =========================================================
-   GENERATE UNIQUE ID
+   MAIN
 ========================================================= */
 
-function generateId() {
+.main {
+  width: calc(100% - var(--sidebar-width));
 
-  return (
-    Date.now().toString(36) +
-    "-" +
-    Math.random()
-      .toString(36)
-      .slice(2, 10)
-  );
+  min-height: 100vh;
+
+  margin-left: var(--sidebar-width);
+
+  padding: 0 32px 40px;
 }
 
 
 /* =========================================================
-   GENERATE REFERENCE
+   TOPBAR
 ========================================================= */
 
-async function nextRef() {
+.topbar {
+  min-height: 96px;
 
-  const year =
-    new Date()
-      .getFullYear();
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
+  gap: 20px;
 
-  let highest =
-    0;
+  border-bottom: 1px solid var(--border);
 
+  margin-bottom: 28px;
+}
 
-  deliveries.forEach(
-    delivery => {
+.page-heading {
+  display: flex;
+  align-items: center;
 
-      const d =
-        normalizeDelivery(
-          delivery
-        );
+  gap: 12px;
+}
 
+.page-heading h1 {
+  margin: 0;
 
-      const match =
-        String(d.reference)
-          .match(
-            /^AJT-DEL-(\d{4})-(\d+)$/
-          );
+  font-size: 27px;
+  line-height: 1.2;
 
+  font-weight: 800;
 
-      if (
-        match &&
-        Number(match[1]) === year
-      ) {
+  letter-spacing: -0.7px;
+}
 
-        const number =
-          parseInt(
-            match[2],
-            10
-          );
+.page-heading p {
+  margin: 6px 0 0;
 
+  color: var(--muted);
 
-        if (
-          Number.isFinite(number) &&
-          number > highest
-        ) {
+  font-size: 13px;
+}
 
-          highest =
-            number;
-        }
-      }
-    }
-  );
+.mobile-brand {
+  display: none;
+}
 
+.mobile-brand img {
+  width: 42px;
+  height: 42px;
 
-  return (
-    `AJT-DEL-${year}-${String(
-      highest + 1
-    ).padStart(4, "0")}`
-  );
+  object-fit: cover;
+
+  border-radius: 10px;
 }
 
 
 /* =========================================================
-   SAVE DELIVERY
+   BUTTONS
 ========================================================= */
 
-async function saveDelivery(formData) {
+.primary,
+.secondary {
+  min-height: 42px;
 
-  try {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-    /* =====================================================
-       EDIT EXISTING
-    ===================================================== */
+  gap: 7px;
 
-    if (editingId) {
+  padding: 0 16px;
 
-      const index =
-        deliveries.findIndex(
-          d =>
-            d.id ===
-            editingId
-        );
+  border-radius: 8px;
 
+  font-size: 13px;
+  font-weight: 700;
 
-      if (index === -1) {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
 
-        toast(
-          "Delivery could not be found."
-        );
+.primary {
+  border: 1px solid var(--brand);
 
-        return false;
-      }
+  background: var(--brand);
 
+  color: #111111;
 
-      const existing =
-        normalizeDelivery(
-          deliveries[index]
-        );
+  box-shadow:
+    0 4px 12px rgba(252, 194, 36, 0.18);
+}
 
+.primary:hover {
+  background: #f5b900;
 
-      deliveries[index] = {
+  transform: translateY(-1px);
 
-        ...existing,
+  box-shadow:
+    0 6px 15px rgba(252, 194, 36, 0.28);
+}
 
-        date:
-          formData.date,
+.secondary {
+  border: 1px solid var(--border-dark);
 
-        status:
-          formData.status,
+  background: #ffffff;
 
-        customer:
-          formData.customer,
+  color: #333333;
+}
 
-        phone:
-          formData.phone,
+.secondary:hover {
+  background: #f7f7f7;
 
-        address:
-          formData.address,
-
-        driver:
-          formData.driver,
-
-        vehicle:
-          formData.vehicle,
-
-        expected_time:
-          formData.expected_time,
-
-        items:
-          formData.items,
-
-        notes:
-          formData.notes,
-
-        updated_at:
-          new Date()
-            .toISOString()
-      };
-
-
-      if (
-        !saveDeliveries()
-      ) {
-
-        return false;
-      }
-
-
-      toast(
-        "Delivery updated successfully."
-      );
-    }
-
-
-    /* =====================================================
-       CREATE NEW
-    ===================================================== */
-
-    else {
-
-      const reference =
-        await nextRef();
-
-
-      const delivery = {
-
-        id:
-          generateId(),
-
-        reference_number:
-          reference,
-
-        delivery_date:
-          formData.date,
-
-        status:
-          formData.status,
-
-        customer_name:
-          formData.customer,
-
-        phone:
-          formData.phone ||
-          "",
-
-        address:
-          formData.address ||
-          "",
-
-        driver:
-          formData.driver ||
-          "",
-
-        vehicle:
-          formData.vehicle ||
-          "",
-
-        expected_time:
-          formData.expected_time ||
-          "",
-
-        items:
-          formData.items,
-
-        notes:
-          formData.notes ||
-          "",
-
-        created_at:
-          new Date()
-            .toISOString(),
-
-        updated_at:
-          new Date()
-            .toISOString()
-      };
-
-
-      deliveries.unshift(
-        delivery
-      );
-
-
-      if (
-        !saveDeliveries()
-      ) {
-
-        return false;
-      }
-
-
-      toast(
-        `Delivery ${reference} saved successfully.`
-      );
-    }
-
-
-    return true;
-
-
-  } catch (error) {
-
-    console.error(
-      "Save delivery error:",
-      error
-    );
-
-
-    toast(
-      error.message ||
-      "Unable to save delivery."
-    );
-
-
-    return false;
-  }
+  border-color: #c8c8c8;
 }
 
 
 /* =========================================================
-   DELETE DELIVERY
+   CARDS
 ========================================================= */
 
-async function deleteDelivery(id) {
+.cards {
+  display: grid;
 
-  const raw =
-    deliveries.find(
-      d =>
-        d.id === id
-    );
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
 
+  gap: 16px;
 
-  if (!raw) {
-    return;
-  }
+  margin-bottom: 20px;
+}
 
+.stat-card {
+  min-height: 112px;
 
-  const d =
-    normalizeDelivery(
-      raw
-    );
+  display: flex;
+  align-items: center;
 
+  gap: 14px;
 
-  if (
-    !confirm(
-      `Delete delivery ${d.reference}?`
-    )
-  ) {
+  padding: 20px;
 
-    return;
-  }
+  background: #ffffff;
 
+  border: 1px solid var(--border);
 
-  try {
+  border-radius: var(--radius);
 
-    deliveries =
-      deliveries.filter(
-        d =>
-          d.id !== id
-      );
+  box-shadow: var(--shadow-sm);
+}
 
+.stat-icon {
+  width: 48px;
+  height: 48px;
 
-    if (
-      !saveDeliveries()
-    ) {
+  flex: 0 0 48px;
 
-      return;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  border-radius: 12px;
 
-    renderTable();
+  font-size: 21px;
+  font-weight: 800;
+}
 
-    renderDashboard();
+.total-icon {
+  background: var(--brand-light);
+  color: #9c7200;
+}
 
+.pending-icon {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
 
-    toast(
-      "Delivery deleted successfully."
-    );
+.out-icon {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
 
+.delivered-icon {
+  background: var(--green-bg);
+  color: var(--green);
+}
 
-  } catch (error) {
+.stat-card span {
+  display: block;
 
-    console.error(
-      "Delete error:",
-      error
-    );
+  color: var(--muted);
 
+  font-size: 12px;
+  font-weight: 600;
+}
 
-    toast(
-      "Unable to delete delivery."
-    );
-  }
+.stat-card b {
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: 27px;
+
+  line-height: 1;
+
+  color: var(--black);
 }
 
 
 /* =========================================================
-   STATUS BADGE
+   PANELS
 ========================================================= */
 
-function badge(status) {
+.panel {
+  background: #ffffff;
 
-  let className =
-    "pending";
+  border: 1px solid var(--border);
 
+  border-radius: var(--radius);
 
-  if (
-    status ===
-    "Out for Delivery"
-  ) {
+  box-shadow: var(--shadow-sm);
 
-    className =
-      "out";
-  }
+  overflow: hidden;
 
-  else if (
-    status ===
-    "Delivered"
-  ) {
+  margin-bottom: 20px;
+}
 
-    className =
-      "delivered";
-  }
+.panel-head {
+  min-height: 76px;
 
-  else if (
-    status ===
-    "Cancelled"
-  ) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    className =
-      "cancelled";
-  }
+  gap: 15px;
 
+  padding: 18px 20px;
 
-  return `
+  border-bottom: 1px solid var(--border);
+}
 
-    <span class="badge ${className}">
-      ${escapeHtml(
-        status ||
-        "Pending"
-      )}
-    </span>
+.panel-head h2 {
+  margin: 0;
 
-  `;
+  font-size: 16px;
+
+  font-weight: 800;
+
+  color: var(--black);
+}
+
+.panel-head p {
+  margin: 5px 0 0;
+
+  font-size: 12px;
+
+  color: var(--muted);
 }
 
 
 /* =========================================================
-   SHOW VIEW
+   TABLES
 ========================================================= */
 
-function showView(name) {
+.table-wrap {
+  width: 100%;
 
-  if (!views[name]) {
-    return;
-  }
+  overflow-x: auto;
+}
 
+table {
+  width: 100%;
 
-  Object.values(views)
-    .forEach(
-      view =>
-        view.classList.add(
-          "hidden"
-        )
-    );
+  border-collapse: collapse;
 
+  min-width: 760px;
+}
 
-  views[name]
-    .classList.remove(
-      "hidden"
-    );
+th {
+  padding: 13px 18px;
 
+  background: #fafafa;
 
-  document
-    .querySelectorAll(
-      ".nav-btn"
-    )
-    .forEach(
-      button => {
+  color: #777;
 
-        button.classList.toggle(
-          "active",
-          button.dataset.view ===
-          name
-        );
-      }
-    );
+  font-size: 10px;
 
+  font-weight: 800;
 
-  const titles = {
+  text-transform: uppercase;
 
-    dashboard: [
-      "Dashboard",
-      "Track deliveries, drivers and delivery status."
-    ],
+  letter-spacing: 0.5px;
 
-    deliveries: [
-      "Deliveries",
-      "Search, edit, print or delete delivery records."
-    ],
+  text-align: left;
 
-    new: [
-      editingId
-        ? "Edit Delivery"
-        : "New Delivery",
+  white-space: nowrap;
 
-      "Create and manage delivery information."
-    ]
-  };
+  border-bottom: 1px solid var(--border);
+}
 
+td {
+  padding: 14px 18px;
 
-  $("pageTitle")
-    .textContent =
-    titles[name][0];
+  font-size: 12px;
 
+  color: #444;
 
-  $("pageSubtitle")
-    .textContent =
-    titles[name][1];
+  border-bottom: 1px solid #eeeeee;
 
+  vertical-align: middle;
+}
 
-  if (
-    name ===
-    "dashboard"
-  ) {
+tbody tr:last-child td {
+  border-bottom: 0;
+}
 
-    renderDashboard();
-  }
+tbody tr:hover {
+  background: #fffdf5;
+}
 
+td b {
+  color: #222;
 
-  if (
-    name ===
-    "deliveries"
-  ) {
+  font-size: 12px;
+}
 
-    renderTable();
-  }
+.row-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  flex-wrap: wrap;
+}
+
+.icon-btn {
+  min-height: 30px;
+
+  padding: 0 9px;
+
+  border-radius: 6px;
+
+  border: 1px solid var(--border);
+
+  background: #ffffff;
+
+  color: #444;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.icon-btn:hover {
+  background: var(--brand-light);
+
+  border-color: var(--brand);
+
+  color: #111;
 }
 
 
 /* =========================================================
-   OPEN NEW DELIVERY
+   STATUS BADGES
 ========================================================= */
 
-async function openNew() {
+.badge {
+  display: inline-flex;
+  align-items: center;
 
-  editingId =
-    null;
+  min-height: 26px;
 
+  padding: 0 9px;
 
-  const form =
-    $("deliveryForm");
+  border-radius: 999px;
 
+  font-size: 10px;
 
-  if (form) {
-    form.reset();
-  }
+  font-weight: 800;
 
+  white-space: nowrap;
+}
 
-  $("editingId")
-    .value = "";
+.badge.pending {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
 
+.badge.out {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
 
-  $("deliveryDate")
-    .value =
-    new Date()
-      .toISOString()
-      .slice(
-        0,
-        10
-      );
+.badge.delivered {
+  background: var(--green-bg);
+  color: var(--green);
+}
 
-
-  $("status")
-    .value =
-    "Pending";
-
-
-  $("formTitle")
-    .textContent =
-    "Create New Delivery";
-
-
-  $("refPreview")
-    .textContent =
-    "Generating...";
-
-
-  showView(
-    "new"
-  );
-
-
-  const reference =
-    await nextRef();
-
-
-  if (!editingId) {
-
-    $("refPreview")
-      .textContent =
-      reference;
-  }
+.badge.cancelled {
+  background: var(--red-bg);
+  color: var(--red);
 }
 
 
 /* =========================================================
-   EDIT DELIVERY
+   DASHBOARD GRID
 ========================================================= */
 
-function editDelivery(id) {
+.dashboard-grid {
+  display: grid;
 
-  const raw =
-    deliveries.find(
-      d =>
-        d.id === id
-    );
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
 
-
-  if (!raw) {
-    return;
-  }
-
-
-  const d =
-    normalizeDelivery(
-      raw
-    );
-
-
-  editingId =
-    id;
-
-
-  $("editingId")
-    .value =
-    id;
-
-
-  $("formTitle")
-    .textContent =
-    "Edit Delivery";
-
-
-  $("refPreview")
-    .textContent =
-    d.reference ||
-    "Delivery";
-
-
-  $("deliveryDate")
-    .value =
-    d.date || "";
-
-
-  $("status")
-    .value =
-    d.status ||
-    "Pending";
-
-
-  $("customer")
-    .value =
-    d.customer || "";
-
-
-  $("phone")
-    .value =
-    d.phone || "";
-
-
-  $("address")
-    .value =
-    d.address || "";
-
-
-  $("driver")
-    .value =
-    d.driver || "";
-
-
-  $("vehicle")
-    .value =
-    d.vehicle || "";
-
-
-  $("expectedTime")
-    .value =
-    d.expected_time ||
-    "";
-
-
-  $("items")
-    .value =
-    d.items || "";
-
-
-  $("notes")
-    .value =
-    d.notes || "";
-
-
-  showView(
-    "new"
-  );
+  gap: 20px;
 }
 
 
 /* =========================================================
-   DASHBOARD
+   QUICK ACTIONS
 ========================================================= */
 
-function renderDashboard() {
+.quick-actions {
+  display: grid;
 
-  const normalized =
-    deliveries.map(
-      normalizeDelivery
-    );
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 
+  gap: 10px;
 
-  const total =
-    normalized.length;
+  padding: 20px;
+}
 
+.quick {
+  min-height: 52px;
 
-  const pending =
-    normalized.filter(
-      d =>
-        d.status ===
-        "Pending"
-    ).length;
+  display: flex;
+  align-items: center;
 
+  gap: 10px;
 
-  const out =
-    normalized.filter(
-      d =>
-        d.status ===
-        "Out for Delivery"
-    ).length;
+  padding: 10px 13px;
 
+  border: 1px solid var(--border);
 
-  const delivered =
-    normalized.filter(
-      d =>
-        d.status ===
-        "Delivered"
-    ).length;
+  border-radius: 9px;
 
+  background: #ffffff;
 
-  $("statTotal")
-    .textContent =
-    total;
+  color: #333;
 
+  font-size: 12px;
 
-  $("statPending")
-    .textContent =
-    pending;
+  font-weight: 700;
 
+  text-align: left;
+}
 
-  $("statOut")
-    .textContent =
-    out;
+.quick:hover {
+  border-color: var(--brand);
 
+  background: var(--brand-light);
+}
 
-  $("statDelivered")
-    .textContent =
-    delivered;
+.quick-icon {
+  width: 30px;
+  height: 30px;
 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  const recent =
-    normalized
-      .slice()
-      .sort(
-        (a, b) =>
-          new Date(
-            b.created_at || 0
-          ) -
-          new Date(
-            a.created_at || 0
-          )
-      )
-      .slice(
-        0,
-        8
-      );
+  flex: 0 0 30px;
 
+  border-radius: 7px;
 
-  $("recentTable")
-    .innerHTML =
-    recent.length
-      ? recent
-          .map(
-            rowHtml
-          )
-          .join("")
-      : `
+  background: var(--brand-light);
 
-        <tr>
+  color: #8b6500;
 
-          <td
-            colspan="6"
-            class="empty"
-          >
-            No deliveries yet.
-          </td>
+  font-size: 15px;
+}
 
-        </tr>
+.file-label {
+  cursor: pointer;
+}
 
-      `;
-
-
-  const statuses = [
-    "Pending",
-    "Out for Delivery",
-    "Delivered",
-    "Cancelled"
-  ];
-
-
-  $("statusOverview")
-    .innerHTML =
-    statuses
-      .map(
-        status => {
-
-          const count =
-            normalized.filter(
-              d =>
-                d.status ===
-                status
-            ).length;
-
-
-          const percentage =
-            total
-              ? Math.max(
-                  count
-                    ? 3
-                    : 0,
-                  (
-                    count /
-                    total
-                  ) *
-                  100
-                )
-              : 0;
-
-
-          return `
-
-            <div class="status-line">
-
-              <span>
-                ${escapeHtml(
-                  status
-                )}
-              </span>
-
-              <div class="bar">
-                <i
-                  style="width:${percentage}%"
-                ></i>
-              </div>
-
-              <b>
-                ${count}
-              </b>
-
-            </div>
-
-          `;
-        }
-      )
-      .join("");
+.file-label input {
+  display: none;
 }
 
 
 /* =========================================================
-   RECENT TABLE ROW
+   STATUS OVERVIEW
 ========================================================= */
 
-function rowHtml(d) {
+.status-overview {
+  padding: 20px;
+}
 
-  return `
+.status-line {
+  display: grid;
 
-    <tr>
+  grid-template-columns:
+    125px
+    1fr
+    30px;
 
-      <td>
-        <b>
-          ${escapeHtml(
-            d.reference ||
-            "—"
-          )}
-        </b>
-      </td>
+  align-items: center;
 
-      <td>
-        ${escapeHtml(
-          d.date ||
-          "—"
-        )}
-      </td>
+  gap: 12px;
 
-      <td>
-        ${escapeHtml(
-          d.customer ||
-          "—"
-        )}
-      </td>
+  margin-bottom: 18px;
+}
 
-      <td>
-        ${escapeHtml(
-          d.driver ||
-          "—"
-        )}
-      </td>
+.status-line:last-child {
+  margin-bottom: 0;
+}
 
-      <td>
-        ${badge(
-          d.status
-        )}
-      </td>
+.status-line > span {
+  font-size: 12px;
 
-      <td>
+  color: #555;
 
-        <div class="row-actions">
+  font-weight: 600;
+}
 
-          <button
-            class="icon-btn"
-            type="button"
-            onclick="editDelivery('${d.id}')"
-          >
-            Edit
-          </button>
+.status-line b {
+  text-align: right;
 
-          <button
-            class="icon-btn"
-            type="button"
-            onclick="printDelivery('${d.id}')"
-          >
-            Print
-          </button>
+  font-size: 12px;
+}
 
-        </div>
+.bar {
+  height: 8px;
 
-      </td>
+  overflow: hidden;
 
-    </tr>
+  border-radius: 999px;
 
-  `;
+  background: #eeeeee;
+}
+
+.bar i {
+  display: block;
+
+  height: 100%;
+
+  min-width: 0;
+
+  border-radius: inherit;
+
+  background: var(--brand);
 }
 
 
 /* =========================================================
-   ALL DELIVERIES
+   TOOLBAR
 ========================================================= */
 
-function renderTable() {
+.toolbar {
+  display: flex;
+  align-items: center;
 
-  const searchElement =
-    $("searchInput");
+  gap: 10px;
 
+  padding: 18px;
 
-  const statusElement =
-    $("statusFilter");
+  border-bottom: 1px solid var(--border);
 
+  background: #ffffff;
+}
 
-  const query =
-    searchElement
-      ? searchElement.value
-          .toLowerCase()
-          .trim()
-      : "";
+.search-box {
+  position: relative;
 
+  flex: 1;
+}
 
-  const status =
-    statusElement
-      ? statusElement.value
-      : "";
+.search-box > span {
+  position: absolute;
 
+  left: 13px;
+  top: 50%;
 
-  const rows =
-    deliveries
-      .map(
-        normalizeDelivery
-      )
-      .filter(
-        d =>
-          !status ||
-          d.status === status
-      )
-      .filter(
-        d => {
+  transform: translateY(-50%);
 
-          if (!query) {
-            return true;
-          }
+  color: #999;
 
+  font-size: 18px;
 
-          return [
+  pointer-events: none;
+}
 
-            d.reference,
-            d.customer,
-            d.phone,
-            d.driver,
-            d.vehicle,
-            d.address,
-            d.items,
-            d.notes
+.search-box input {
+  padding-left: 38px;
+}
 
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(
-              query
-            );
-        }
-      )
-      .sort(
-        (a, b) =>
-          new Date(
-            b.created_at || 0
-          ) -
-          new Date(
-            a.created_at || 0
-          )
-      );
-
-
-  $("allTable")
-    .innerHTML =
-    rows
-      .map(
-        d => `
-
-          <tr>
-
-            <td>
-              <b>
-                ${escapeHtml(
-                  d.reference ||
-                  "—"
-                )}
-              </b>
-            </td>
-
-            <td>
-              ${escapeHtml(
-                d.date ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${escapeHtml(
-                d.customer ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${escapeHtml(
-                d.phone ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${escapeHtml(
-                d.driver ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${badge(
-                d.status
-              )}
-            </td>
-
-            <td>
-
-              <div class="row-actions">
-
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="editDelivery('${d.id}')"
-                >
-                  Edit
-                </button>
-
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="printDelivery('${d.id}')"
-                >
-                  Print
-                </button>
-
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="deleteDelivery('${d.id}')"
-                >
-                  Delete
-                </button>
-
-              </div>
-
-            </td>
-
-          </tr>
-
-        `
-      )
-      .join("");
-
-
-  $("emptyState")
-    .classList.toggle(
-      "hidden",
-      rows.length > 0
-    );
+.toolbar select {
+  width: 190px;
 }
 
 
 /* =========================================================
-   PRINT DELIVERY
+   INPUTS
 ========================================================= */
 
-function printDelivery(id) {
+input,
+select,
+textarea {
+  width: 100%;
 
-  const raw =
-    deliveries.find(
-      d =>
-        d.id === id
-    );
+  border: 1px solid var(--border-dark);
 
+  border-radius: 8px;
 
-  if (!raw) {
-    return;
-  }
+  background: #ffffff;
 
+  color: #222;
 
-  const d =
-    normalizeDelivery(
-      raw
-    );
+  outline: none;
 
+  transition:
+    border 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
 
-  const w =
-    window.open(
-      "",
-      "_blank",
-      "width=900,height=750"
-    );
+input,
+select {
+  height: 44px;
 
+  padding: 0 12px;
 
-  if (!w) {
+  font-size: 13px;
+}
 
-    alert(
-      "Please allow pop-ups to print the delivery note."
-    );
+textarea {
+  padding: 12px;
 
-    return;
-  }
+  font-size: 13px;
 
+  line-height: 1.5;
 
-  const items =
-    escapeHtml(
-      d.items
-    ).replace(
-      /\n/g,
-      "<br>"
-    );
+  resize: vertical;
+}
 
+input::placeholder,
+textarea::placeholder {
+  color: #aaa;
+}
 
-  const notes =
-    escapeHtml(
-      d.notes ||
-      ""
-    ).replace(
-      /\n/g,
-      "<br>"
-    );
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand-dark);
 
-
-  w.document.write(`
-
-    <!DOCTYPE html>
-
-    <html>
-
-    <head>
-
-      <title>
-        ${escapeHtml(
-          d.reference
-        )}
-      </title>
-
-      <style>
-
-        * {
-          box-sizing:border-box;
-        }
-
-        body {
-          margin:0;
-          padding:40px;
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-
-          color:#111;
-
-          background:#fff;
-        }
-
-        .page {
-          max-width:850px;
-          margin:auto;
-        }
-
-        .header {
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-
-          padding-bottom:20px;
-
-          border-bottom:4px solid #FCC224;
-        }
-
-        .logo {
-          width:75px;
-          height:75px;
-
-          object-fit:cover;
-
-          border-radius:12px;
-        }
-
-        .company h1 {
-          margin:0;
-
-          font-size:25px;
-
-          font-weight:900;
-        }
-
-        .company p {
-          margin:5px 0 0;
-
-          color:#666;
-
-          font-size:12px;
-        }
-
-        .reference {
-          text-align:right;
-
-          background:#fff7d6;
-
-          padding:12px 15px;
-
-          border-radius:8px;
-        }
-
-        .reference span {
-          display:block;
-
-          color:#8b6500;
-
-          font-size:9px;
-
-          font-weight:bold;
-
-          letter-spacing:1px;
-        }
-
-        .reference strong {
-          display:block;
-
-          margin-top:4px;
-
-          font-size:13px;
-        }
-
-        h2 {
-          margin:25px 0 10px;
-
-          font-size:16px;
-        }
-
-        table {
-          width:100%;
-
-          border-collapse:collapse;
-
-          margin-top:15px;
-        }
-
-        td {
-          padding:10px 12px;
-
-          border-bottom:1px solid #e5e5e5;
-
-          vertical-align:top;
-
-          font-size:12px;
-        }
-
-        td:first-child {
-          width:180px;
-
-          font-weight:bold;
-
-          background:#fafafa;
-        }
-
-        .items {
-          white-space:normal;
-
-          line-height:1.7;
-        }
-
-        .signature-area {
-          display:grid;
-
-          grid-template-columns:
-            1fr 1fr;
-
-          gap:50px;
-
-          margin-top:80px;
-        }
-
-        .signature {
-          padding-top:35px;
-
-          border-top:1px solid #222;
-
-          font-size:11px;
-
-          color:#555;
-        }
-
-        .footer {
-          margin-top:50px;
-
-          padding-top:15px;
-
-          border-top:2px solid #FCC224;
-
-          color:#777;
-
-          font-size:10px;
-
-          text-align:center;
-        }
-
-        @media print {
-
-          body {
-            padding:20px;
-          }
-
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <div class="page">
-
-        <div class="header">
-
-          <div>
-
-            <img
-              src="logo.png"
-              class="logo"
-              alt="AL JEFOON TENTS"
-            >
-
-          </div>
-
-          <div class="company">
-
-            <h1>
-              AL JEFOON TENTS
-            </h1>
-
-            <p>
-              Delivery Management System
-            </p>
-
-          </div>
-
-          <div class="reference">
-
-            <span>
-              DELIVERY REFERENCE
-            </span>
-
-            <strong>
-              ${escapeHtml(
-                d.reference
-              )}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <h2>
-          Delivery Note
-        </h2>
-
-
-        <table>
-
-          <tr>
-            <td>Delivery Date</td>
-            <td>
-              ${escapeHtml(
-                d.date
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Status</td>
-            <td>
-              ${escapeHtml(
-                d.status
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Customer / Company</td>
-            <td>
-              ${escapeHtml(
-                d.customer
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Contact Number</td>
-            <td>
-              ${escapeHtml(
-                d.phone ||
-                "—"
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Delivery Address</td>
-            <td>
-              ${escapeHtml(
-                d.address ||
-                "—"
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Driver</td>
-            <td>
-              ${escapeHtml(
-                d.driver ||
-                "—"
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Vehicle</td>
-            <td>
-              ${escapeHtml(
-                d.vehicle ||
-                "—"
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Expected Time</td>
-            <td>
-              ${escapeHtml(
-                d.expected_time ||
-                "—"
-              )}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Items / Equipment</td>
-            <td class="items">
-              ${items}
-            </td>
-          </tr>
-
-          <tr>
-            <td>Notes</td>
-            <td class="items">
-              ${notes || "—"}
-            </td>
-          </tr>
-
-        </table>
-
-
-        <div class="signature-area">
-
-          <div class="signature">
-            Driver Signature
-          </div>
-
-          <div class="signature">
-            Customer Signature
-          </div>
-
-        </div>
-
-
-        <div class="footer">
-          AL JEFOON TENTS — Delivery Note
-        </div>
-
-      </div>
-
-
-      <script>
-
-        window.onload = function() {
-          window.print();
-        };
-
-      <\/script>
-
-    </body>
-
-    </html>
-
-  `);
-
-
-  w.document.close();
+  box-shadow:
+    0 0 0 3px rgba(252, 194, 36, 0.15);
 }
 
 
 /* =========================================================
-   EXPORT CSV
+   FORM
 ========================================================= */
 
-function exportCsv() {
+.form-panel {
+  padding: 0;
+}
 
-  const headers = [
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    "Reference",
-    "Date",
-    "Status",
-    "Customer",
-    "Phone",
-    "Address",
-    "Driver",
-    "Vehicle",
-    "Expected Time",
-    "Items",
-    "Notes"
+  gap: 25px;
 
-  ];
+  padding: 26px 28px;
+}
 
+.section-label {
+  margin-bottom: 7px;
 
-  const rows =
-    deliveries
-      .map(
-        normalizeDelivery
-      )
-      .map(
-        d => [
+  color: #a47700;
 
-          d.reference,
-          d.date,
-          d.status,
-          d.customer,
-          d.phone,
-          d.address,
-          d.driver,
-          d.vehicle,
-          d.expected_time,
-          d.items,
-          d.notes
+  font-size: 10px;
 
-        ]
-      );
+  font-weight: 900;
 
+  letter-spacing: 1px;
+}
 
-  const csv =
-    [
-      headers,
-      ...rows
-    ]
-      .map(
-        row =>
-          row
-            .map(
-              value =>
-                `"${String(
-                  value ?? ""
-                ).replace(
-                  /"/g,
-                  '""'
-                )}"`
-            )
-            .join(",")
-      )
-      .join("\n");
+.form-header h2 {
+  margin: 0;
 
+  font-size: 21px;
 
-  const blob =
-    new Blob(
-      [csv],
-      {
-        type:
-          "text/csv;charset=utf-8;"
-      }
-    );
+  font-weight: 800;
+}
 
+.form-header p {
+  margin: 6px 0 0;
 
-  const url =
-    URL.createObjectURL(
-      blob
-    );
+  color: var(--muted);
 
+  font-size: 12px;
+}
 
-  const a =
-    document.createElement(
-      "a"
-    );
+.reference-box {
+  min-width: 190px;
 
+  padding: 13px 15px;
 
-  a.href =
-    url;
+  border-radius: 9px;
 
+  background: var(--brand-light);
 
-  a.download =
-    "al-jefoon-deliveries.csv";
+  border: 1px solid rgba(252, 194, 36, 0.5);
 
+  text-align: right;
+}
 
-  document.body.appendChild(a);
+.reference-box span {
+  display: block;
 
-  a.click();
+  margin-bottom: 4px;
 
-  a.remove();
+  color: #9a7100;
 
+  font-size: 9px;
 
-  URL.revokeObjectURL(
-    url
-  );
+  font-weight: 900;
 
+  letter-spacing: 1px;
+}
 
-  toast(
-    "CSV exported successfully."
-  );
+.reference-box strong {
+  color: #111;
+
+  font-size: 13px;
+}
+
+.form-divider {
+  height: 1px;
+
+  background: var(--border);
+}
+
+.form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 20px;
+
+  padding: 26px 28px;
+}
+
+.form-grid label {
+  display: block;
+
+  min-width: 0;
+}
+
+.form-grid label > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #333;
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+.form-grid em {
+  color: #d32f2f;
+
+  font-style: normal;
+}
+
+.form-grid small {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #888;
+
+  font-size: 10px;
+}
+
+.wide {
+  grid-column: 1 / -1;
 }
 
 
 /* =========================================================
-   BACKUP TO LOCAL FILE
+   FORM ACTIONS
 ========================================================= */
 
-function backup() {
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 
-  const data =
-    deliveries.map(
-      normalizeDelivery
-    );
+  gap: 10px;
 
+  padding: 18px 28px;
 
-  const backupData = {
+  border-top: 1px solid var(--border);
 
-    app:
-      "AL JEFOON TENTS — Delivery Management",
+  background: #fafafa;
+}
 
-    version:
-      "1.0",
-
-    created:
-      new Date()
-        .toISOString(),
-
-    deliveries:
-      data
-
-  };
-
-
-  const blob =
-    new Blob(
-      [
-        JSON.stringify(
-          backupData,
-          null,
-          2
-        )
-      ],
-      {
-        type:
-          "application/json"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const a =
-    document.createElement(
-      "a"
-    );
-
-
-  a.href =
-    url;
-
-
-  a.download =
-    `ajt-delivery-backup-${new Date()
-      .toISOString()
-      .slice(
-        0,
-        10
-      )}.json`;
-
-
-  document.body.appendChild(a);
-
-  a.click();
-
-  a.remove();
-
-
-  URL.revokeObjectURL(
-    url
-  );
-
-
-  toast(
-    "Backup downloaded successfully."
-  );
+.save-btn {
+  min-width: 150px;
 }
 
 
 /* =========================================================
-   RESTORE LOCAL BACKUP
+   EMPTY STATE
 ========================================================= */
 
-async function restoreBackup(file) {
+.empty {
+  padding: 45px 20px;
 
-  try {
+  text-align: center;
 
-    const imported =
-      JSON.parse(
-        await file.text()
-      );
+  color: #999;
 
-
-    let data;
+  font-size: 13px;
+}
 
 
-    /*
-      Supports the new backup format.
-    */
+/* =========================================================
+   HIDDEN
+========================================================= */
 
-    if (
-      imported &&
-      Array.isArray(
-        imported.deliveries
-      )
-    ) {
-
-      data =
-        imported.deliveries;
-
-    }
-
-
-    /*
-      Also supports the old backup format
-      where the JSON itself was an array.
-    */
-
-    else if (
-      Array.isArray(
-        imported
-      )
-    ) {
-
-      data =
-        imported;
-
-    }
-
-
-    else {
-
-      throw new Error(
-        "Backup file is not valid."
-      );
-    }
-
-
-    if (
-      !data.length
-    ) {
-
-      toast(
-        "Backup contains no deliveries."
-      );
-
-      return;
-    }
-
-
-    const confirmed =
-      confirm(
-        `Restore ${data.length} deliveries? This will replace the current local delivery data.`
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    deliveries =
-      data.map(
-        d => {
-
-          const item =
-            normalizeDelivery(
-              d
-            );
-
-
-          return {
-
-            id:
-              item.id ||
-              generateId(),
-
-            reference_number:
-              item.reference ||
-              null,
-
-            delivery_date:
-              item.date ||
-              "",
-
-            status:
-              item.status ||
-              "Pending",
-
-            customer_name:
-              item.customer ||
-              "",
-
-            phone:
-              item.phone ||
-              "",
-
-            address:
-              item.address ||
-              "",
-
-            driver:
-              item.driver ||
-              "",
-
-            vehicle:
-              item.vehicle ||
-              "",
-
-            expected_time:
-              item.expected_time ||
-              "",
-
-            items:
-              item.items ||
-              "",
-
-            notes:
-              item.notes ||
-              "",
-
-            created_at:
-              item.created_at ||
-              new Date()
-                .toISOString(),
-
-            updated_at:
-              item.updated_at ||
-              new Date()
-                .toISOString()
-          };
-        }
-      );
-
-
-    if (
-      !saveDeliveries()
-    ) {
-
-      return;
-    }
-
-
-    renderDashboard();
-
-    renderTable();
-
-
-    toast(
-      "Backup restored successfully."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Restore error:",
-      error
-    );
-
-
-    alert(
-      error.message ||
-      "Invalid backup file."
-    );
-  }
+.hidden {
+  display: none !important;
 }
 
 
@@ -2146,424 +1160,761 @@ async function restoreBackup(file) {
    TOAST
 ========================================================= */
 
-function toast(message) {
+.toast {
+  position: fixed;
 
-  const element =
-    $("toast");
+  left: 50%;
+
+  bottom: 25px;
+
+  z-index: 1000000;
+
+  transform:
+    translate(-50%, 20px);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  max-width: calc(100vw - 40px);
+
+  padding: 12px 18px;
+
+  border-radius: 9px;
+
+  background: #111111;
+
+  color: #ffffff;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.2);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+
+  transform:
+    translate(-50%, 0);
+}
 
 
-  if (!element) {
-    return;
-  }
+/* =========================================================
+   LOGIN SCREEN
+========================================================= */
+
+#loginScreen {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 999999;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f5f6f8 0%,
+      #ffffff 50%,
+      #fff8df 100%
+    );
+
+  padding: 20px;
+}
+
+.login-background {
+  position: absolute;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.login-circle {
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  right: -180px;
+  top: -200px;
+
+  border-radius: 50%;
+
+  background: rgba(252, 194, 36, 0.12);
+}
+
+.login-card {
+  position: relative;
+
+  width: 100%;
+  max-width: 430px;
+
+  padding: 40px;
+
+  background: #ffffff;
+
+  border: 1px solid rgba(0, 0, 0, 0.07);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.12);
+}
+
+.login-logo {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+
+  background: var(--brand);
+
+  box-shadow:
+    0 8px 20px rgba(252, 194, 36, 0.28);
+}
+
+.login-logo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.login-heading {
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+.login-heading h1 {
+  margin: 0;
+
+  font-size: 23px;
+
+  font-weight: 900;
+
+  letter-spacing: -0.4px;
+}
+
+.login-heading p {
+  margin: 7px 0 0;
+
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+.login-form label {
+  display: block;
+
+  margin-bottom: 18px;
+}
+
+.login-form label > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #222;
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+.login-form input {
+  height: 46px;
+}
+
+.login-button {
+  width: 100%;
+
+  height: 48px;
+
+  margin-top: 3px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: var(--brand);
+
+  color: #111;
+
+  font-weight: 800;
+
+  font-size: 14px;
+
+  box-shadow:
+    0 5px 15px rgba(252, 194, 36, 0.2);
+}
+
+.login-button:hover {
+  background: #f5b900;
+}
+
+.login-error {
+  display: none;
+
+  margin-bottom: 16px;
+
+  padding: 11px;
+
+  border-radius: 8px;
+
+  background: var(--red-bg);
+
+  color: var(--red);
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
 
 
-  element.textContent =
-    message;
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+body.dark-mode {
+  --bg: #121212;
+  --white: #1b1b1b;
+
+  --text: #f1f1f1;
+  --black: #ffffff;
+  --muted: #a5a5a5;
+
+  --border: #303030;
+  --border-dark: #414141;
+
+  --brand-light: #3a3017;
+
+  --green-bg: #173526;
+  --orange-bg: #3a2b16;
+  --red-bg: #3a1b1b;
+  --blue-bg: #172744;
+
+  background: var(--bg);
+  color: var(--text);
+}
 
 
-  element.classList.add(
-    "show"
-  );
+/* DARK SIDEBAR */
+
+body.dark-mode .sidebar {
+  background: #181818;
+  border-color: var(--border);
+}
+
+body.dark-mode .brand {
+  border-color: var(--border);
+}
+
+body.dark-mode .brand-text strong {
+  color: #ffffff;
+}
+
+body.dark-mode .brand-text small {
+  color: #a5a5a5;
+}
+
+body.dark-mode .nav-btn {
+  color: #bdbdbd;
+}
+
+body.dark-mode .nav-btn:hover {
+  background: #242424;
+  color: #ffffff;
+}
+
+body.dark-mode .nav-btn.active {
+  background: var(--brand);
+  color: #111111;
+}
+
+body.dark-mode .sidebar-footer {
+  border-color: var(--border);
+  color: #999999;
+}
+
+body.dark-mode .secure-info {
+  color: #bdbdbd;
+}
 
 
-  clearTimeout(
-    element._toastTimer
-  );
+/* DARK TOPBAR */
+
+body.dark-mode .topbar {
+  border-color: var(--border);
+}
+
+body.dark-mode .page-heading h1 {
+  color: #ffffff;
+}
+
+body.dark-mode .page-heading p {
+  color: #a5a5a5;
+}
 
 
-  element._toastTimer =
-    setTimeout(
-      () => {
+/* DARK SECONDARY BUTTON */
 
-        element.classList.remove(
-          "show"
-        );
+body.dark-mode .secondary {
+  background: #1f1f1f;
+  border-color: #414141;
+  color: #eeeeee;
+}
 
-      },
-      2800
+body.dark-mode .secondary:hover {
+  background: #292929;
+  border-color: #555555;
+}
+
+
+/* DARK STAT CARDS */
+
+body.dark-mode .stat-card {
+  background: #1b1b1b;
+  border-color: var(--border);
+}
+
+body.dark-mode .stat-card span {
+  color: #a5a5a5;
+}
+
+body.dark-mode .stat-card b {
+  color: #ffffff;
+}
+
+
+/* DARK PANELS */
+
+body.dark-mode .panel {
+  background: #1b1b1b;
+  border-color: var(--border);
+}
+
+
+/* DARK PANEL HEADERS */
+
+body.dark-mode .panel-head {
+  border-color: var(--border);
+}
+
+body.dark-mode .panel-head h2 {
+  color: #ffffff;
+}
+
+body.dark-mode .panel-head p {
+  color: #a5a5a5;
+}
+
+
+/* DARK TABLES */
+
+body.dark-mode th {
+  background: #222222;
+  color: #aaaaaa;
+  border-color: var(--border);
+}
+
+body.dark-mode td {
+  color: #cccccc;
+  border-color: #2c2c2c;
+}
+
+body.dark-mode td b {
+  color: #ffffff;
+}
+
+body.dark-mode tbody tr:hover {
+  background: #25220f;
+}
+
+
+/* DARK ICON BUTTONS */
+
+body.dark-mode .icon-btn {
+  background: #202020;
+  border-color: #3b3b3b;
+  color: #dddddd;
+}
+
+body.dark-mode .icon-btn:hover {
+  background: #3a3017;
+  border-color: var(--brand);
+  color: #ffffff;
+}
+
+
+/* DARK QUICK ACTIONS */
+
+body.dark-mode .quick {
+  background: #1e1e1e;
+  border-color: #363636;
+  color: #dddddd;
+}
+
+body.dark-mode .quick:hover {
+  background: #3a3017;
+  border-color: var(--brand);
+  color: #ffffff;
+}
+
+
+/* DARK STATUS OVERVIEW */
+
+body.dark-mode .status-line > span {
+  color: #bbbbbb;
+}
+
+body.dark-mode .status-line b {
+  color: #ffffff;
+}
+
+body.dark-mode .bar {
+  background: #333333;
+}
+
+
+/* DARK TOOLBAR */
+
+body.dark-mode .toolbar {
+  background: #1b1b1b;
+  border-color: var(--border);
+}
+
+
+/* DARK INPUTS */
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background: #202020;
+  color: #f1f1f1;
+  border-color: #414141;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #777777;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  border-color: var(--brand-dark);
+  box-shadow:
+    0 0 0 3px rgba(252, 194, 36, 0.12);
+}
+
+
+/* DARK FORM */
+
+body.dark-mode .form-header h2 {
+  color: #ffffff;
+}
+
+body.dark-mode .form-header p {
+  color: #a5a5a5;
+}
+
+body.dark-mode .section-label {
+  color: #e2b52a;
+}
+
+body.dark-mode .form-divider {
+  background: var(--border);
+}
+
+body.dark-mode .form-grid label > span {
+  color: #dddddd;
+}
+
+body.dark-mode .form-grid small {
+  color: #888888;
+}
+
+
+/* DARK REFERENCE BOX */
+
+body.dark-mode .reference-box {
+  background: #3a3017;
+  border-color: rgba(252, 194, 36, 0.35);
+}
+
+body.dark-mode .reference-box span {
+  color: #dcb52c;
+}
+
+body.dark-mode .reference-box strong {
+  color: #ffffff;
+}
+
+
+/* DARK FORM ACTIONS */
+
+body.dark-mode .form-actions {
+  background: #171717;
+  border-color: var(--border);
+}
+
+
+/* DARK EMPTY */
+
+body.dark-mode .empty {
+  color: #888888;
+}
+
+
+/* DARK LOGIN */
+
+body.dark-mode #loginScreen {
+  background:
+    linear-gradient(
+      135deg,
+      #101010 0%,
+      #181818 50%,
+      #29230f 100%
     );
 }
 
-
-/* =========================================================
-   DELIVERY FORM SUBMIT
-========================================================= */
-
-$("deliveryForm")
-  .addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-
-      const button =
-        $("saveDeliveryBtn");
-
-
-      const data = {
-
-        date:
-          $("deliveryDate")
-            .value,
-
-        status:
-          $("status")
-            .value,
-
-        customer:
-          $("customer")
-            .value
-            .trim(),
-
-        phone:
-          $("phone")
-            .value
-            .trim(),
-
-        address:
-          $("address")
-            .value
-            .trim(),
-
-        driver:
-          $("driver")
-            .value
-            .trim(),
-
-        vehicle:
-          $("vehicle")
-            .value
-            .trim(),
-
-        expected_time:
-          $("expectedTime")
-            .value ||
-          null,
-
-        items:
-          $("items")
-            .value
-            .trim(),
-
-        notes:
-          $("notes")
-            .value
-            .trim()
-      };
-
-
-      if (
-        !$("deliveryForm")
-          .checkValidity()
-      ) {
-
-        $("deliveryForm")
-          .reportValidity();
-
-        return;
-      }
-
-
-      button.disabled =
-        true;
-
-
-      button.innerHTML =
-        "<span>⏳</span> Saving...";
-
-
-      try {
-
-        const saved =
-          await saveDelivery(
-            data
-          );
-
-
-        if (!saved) {
-          return;
-        }
-
-
-        editingId =
-          null;
-
-
-        $("deliveryForm")
-          .reset();
-
-
-        showView(
-          "dashboard"
-        );
-
-
-      } finally {
-
-        button.disabled =
-          false;
-
-
-        button.innerHTML =
-          "<span>✓</span> Save Delivery";
-      }
-    }
-  );
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-document
-  .querySelectorAll(
-    ".nav-btn"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const view =
-            button.dataset.view;
-
-
-          if (
-            view ===
-            "new"
-          ) {
-
-            openNew();
-
-          } else {
-
-            showView(
-              view
-            );
-          }
-        }
-      );
-    }
-  );
-
-
-/* =========================================================
-   TOP NEW BUTTON
-========================================================= */
-
-$("topNewBtn")
-  .addEventListener(
-    "click",
-    openNew
-  );
-
-
-/* =========================================================
-   TABLE NEW BUTTON
-========================================================= */
-
-$("tableNewBtn")
-  .addEventListener(
-    "click",
-    openNew
-  );
-
-
-/* =========================================================
-   VIEW ALL
-========================================================= */
-
-$("viewAllBtn")
-  .addEventListener(
-    "click",
-    () =>
-      showView(
-        "deliveries"
-      )
-  );
-
-
-/* =========================================================
-   CANCEL FORM
-========================================================= */
-
-$("cancelForm")
-  .addEventListener(
-    "click",
-    () => {
-
-      editingId =
-        null;
-
-
-      showView(
-        "dashboard"
-      );
-    }
-  );
-
-
-/* =========================================================
-   QUICK ACTIONS
-========================================================= */
-
-document
-  .querySelectorAll(
-    "[data-action]"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const action =
-            button.dataset.action;
-
-
-          if (
-            action ===
-            "new"
-          ) {
-
-            openNew();
-
-          } else {
-
-            showView(
-              "deliveries"
-            );
-          }
-        }
-      );
-    }
-  );
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-$("searchInput")
-  .addEventListener(
-    "input",
-    renderTable
-  );
-
-
-/* =========================================================
-   STATUS FILTER
-========================================================= */
-
-$("statusFilter")
-  .addEventListener(
-    "change",
-    renderTable
-  );
-
-
-/* =========================================================
-   CLEAR FILTERS
-========================================================= */
-
-$("clearFilters")
-  .addEventListener(
-    "click",
-    () => {
-
-      $("searchInput")
-        .value = "";
-
-
-      $("statusFilter")
-        .value = "";
-
-
-      renderTable();
-    }
-  );
-
-
-/* =========================================================
-   EXPORT
-========================================================= */
-
-$("exportCsvBtn")
-  .addEventListener(
-    "click",
-    exportCsv
-  );
-
-
-/* =========================================================
-   BACKUP
-========================================================= */
-
-$("backupBtn")
-  .addEventListener(
-    "click",
-    backup
-  );
-
-
-/* =========================================================
-   RESTORE
-========================================================= */
-
-$("restoreInput")
-  .addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files[0];
-
-
-      if (file) {
-
-        restoreBackup(
-          file
-        );
-      }
-
-
-      event.target.value =
-        "";
-    }
-  );
-
-
-/* =========================================================
-   START APPLICATION
-========================================================= */
-
-function startApp() {
-
-  /*
-    No authentication.
-    No email.
-    No password.
-    No Supabase.
-  */
-
-  loadDeliveries();
-
-
-  renderDashboard();
-
-
-  showView(
-    "dashboard"
-  );
+body.dark-mode .login-card {
+  background: #1b1b1b;
+  border-color: #333333;
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .login-heading h1 {
+  color: #ffffff;
+}
+
+body.dark-mode .login-heading p {
+  color: #a5a5a5;
+}
+
+body.dark-mode .login-form label > span {
+  color: #dddddd;
 }
 
 
 /* =========================================================
-   RUN
+   RESPONSIVE
 ========================================================= */
 
-startApp();
+@media (max-width: 1100px) {
+
+  :root {
+    --sidebar-width: 220px;
+  }
+
+  .main {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .cards {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 800px) {
+
+  :root {
+    --sidebar-width: 0px;
+  }
+
+  .sidebar {
+    width: 0;
+
+    overflow: hidden;
+
+    border: 0;
+  }
+
+  .main {
+    width: 100%;
+
+    margin-left: 0;
+
+    padding: 0 15px 30px;
+  }
+
+  .topbar {
+    min-height: 82px;
+  }
+
+  .mobile-brand {
+    display: block;
+  }
+
+  .page-heading h1 {
+    font-size: 21px;
+  }
+
+  .page-heading p {
+    font-size: 11px;
+  }
+
+  .top-new-btn {
+    padding: 0 11px;
+
+    font-size: 11px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr 1fr;
+
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+
+    min-height: 95px;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+  }
+
+  .stat-card b {
+    font-size: 22px;
+  }
+
+  .stat-card span {
+    font-size: 10px;
+  }
+
+  .form-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .reference-box {
+    width: 100%;
+
+    text-align: left;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+
+    padding: 20px;
+  }
+
+  .wide {
+    grid-column: auto;
+  }
+
+  .form-actions {
+    padding: 15px 20px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .toolbar select {
+    width: 100%;
+  }
+
+  .deliveries-head {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .deliveries-head .primary {
+    width: 100%;
+  }
+
+}
+
+
+@media (max-width: 520px) {
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .mobile-brand {
+    display: none;
+  }
+
+  .page-heading h1 {
+    font-size: 19px;
+  }
+
+  .page-heading p {
+    display: none;
+  }
+
+  .top-new-btn span {
+    display: none;
+  }
+
+  .top-new-btn {
+    min-height: 38px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    padding: 15px;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .status-line {
+    grid-template-columns:
+      105px
+      1fr
+      25px;
+  }
+
+  .login-card {
+    padding: 28px 22px;
+  }
+
+}
