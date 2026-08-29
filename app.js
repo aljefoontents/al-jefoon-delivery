@@ -4,6 +4,27 @@
    DELIVERY MANAGEMENT SYSTEM
 ========================================================= */
 
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+const SUPABASE_URL =
+  "https://fhgptbaeyvwwgvrdrufu.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_qKCf-rC8pKpw7CFvECWWSg_TFVDKLmg";
+
+
+const { createClient } = window.supabase;
+
+const db =
+  createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
 /* =========================================================
    APPLICATION STATE
 ========================================================= */
