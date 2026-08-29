@@ -1,29 +1,16 @@
 /* =========================================================
    AL JEFOON TENTS
    DELIVERY MANAGEMENT SYSTEM
-   PASSWORD-FREE VERSION
+   LOCAL STORAGE VERSION
 ========================================================= */
 
 
 /* =========================================================
-   SUPABASE
+   LOCAL STORAGE
 ========================================================= */
 
-const SUPABASE_URL =
-  "https://fhgptbaeyvwwgvrdrufu.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_qKCf-rC8pKpw7CFvECWWSg_TFVDKLmg";
-
-
-const { createClient } = window.supabase;
-
-
-const db =
-  createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const STORAGE_KEY =
+  "alJefoonDeliveryManagementV1";
 
 
 /* =========================================================
@@ -71,35 +58,44 @@ function escapeHtml(value = "") {
 
 
 /* =========================================================
-   LOAD DELIVERIES
+   LOAD DELIVERIES FROM LOCAL STORAGE
 ========================================================= */
 
-async function loadDeliveries() {
+function loadDeliveries() {
 
   try {
 
-    const {
-      data,
-      error
-    } =
-      await db
-        .from("deliveries")
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
+    const saved =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
 
 
-    if (error) {
-      throw error;
+    if (!saved) {
+
+      deliveries = [];
+
+      return true;
     }
 
 
-    deliveries =
-      data || [];
+    const data =
+      JSON.parse(
+        saved
+      );
+
+
+    if (
+      Array.isArray(data)
+    ) {
+
+      deliveries =
+        data;
+
+    } else {
+
+      deliveries = [];
+    }
 
 
     return true;
@@ -113,8 +109,48 @@ async function loadDeliveries() {
     );
 
 
+    deliveries = [];
+
+
     toast(
-      "Unable to load deliveries."
+      "Unable to load saved deliveries."
+    );
+
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   SAVE DELIVERIES TO LOCAL STORAGE
+========================================================= */
+
+function saveDeliveries() {
+
+  try {
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(
+        deliveries
+      )
+    );
+
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(
+      "Save deliveries error:",
+      error
+    );
+
+
+    toast(
+      "Unable to save delivery data."
     );
 
 
@@ -125,7 +161,6 @@ async function loadDeliveries() {
 
 /* =========================================================
    NORMALIZE DELIVERY
-   Handles the existing database column names.
 ========================================================= */
 
 function normalizeDelivery(d) {
@@ -190,6 +225,22 @@ function normalizeDelivery(d) {
       d.updated_at ||
       null
   };
+}
+
+
+/* =========================================================
+   GENERATE UNIQUE ID
+========================================================= */
+
+function generateId() {
+
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2, 10)
+  );
 }
 
 
@@ -263,43 +314,6 @@ async function nextRef() {
 
 async function saveDelivery(formData) {
 
-  const payload = {
-
-    delivery_date:
-      formData.date,
-
-    status:
-      formData.status,
-
-    customer_name:
-      formData.customer,
-
-    phone:
-      formData.phone || null,
-
-    address:
-      formData.address || null,
-
-    driver:
-      formData.driver || null,
-
-    vehicle:
-      formData.vehicle || null,
-
-    expected_time:
-      formData.expected_time || null,
-
-    items:
-      formData.items,
-
-    notes:
-      formData.notes || null,
-
-    updated_at:
-      new Date().toISOString()
-  };
-
-
   try {
 
     /* =====================================================
@@ -308,20 +322,75 @@ async function saveDelivery(formData) {
 
     if (editingId) {
 
-      const {
-        error
-      } =
-        await db
-          .from("deliveries")
-          .update(payload)
-          .eq(
-            "id",
+      const index =
+        deliveries.findIndex(
+          d =>
+            d.id ===
             editingId
-          );
+        );
 
 
-      if (error) {
-        throw error;
+      if (index === -1) {
+
+        toast(
+          "Delivery could not be found."
+        );
+
+        return false;
+      }
+
+
+      const existing =
+        normalizeDelivery(
+          deliveries[index]
+        );
+
+
+      deliveries[index] = {
+
+        ...existing,
+
+        date:
+          formData.date,
+
+        status:
+          formData.status,
+
+        customer:
+          formData.customer,
+
+        phone:
+          formData.phone,
+
+        address:
+          formData.address,
+
+        driver:
+          formData.driver,
+
+        vehicle:
+          formData.vehicle,
+
+        expected_time:
+          formData.expected_time,
+
+        items:
+          formData.items,
+
+        notes:
+          formData.notes,
+
+        updated_at:
+          new Date()
+            .toISOString()
+      };
+
+
+      if (
+        !saveDeliveries()
+      ) {
+
+        return false;
       }
 
 
@@ -341,30 +410,70 @@ async function saveDelivery(formData) {
         await nextRef();
 
 
-      const insertPayload = {
+      const delivery = {
 
-        ...payload,
+        id:
+          generateId(),
 
         reference_number:
           reference,
 
+        delivery_date:
+          formData.date,
+
+        status:
+          formData.status,
+
+        customer_name:
+          formData.customer,
+
+        phone:
+          formData.phone ||
+          "",
+
+        address:
+          formData.address ||
+          "",
+
+        driver:
+          formData.driver ||
+          "",
+
+        vehicle:
+          formData.vehicle ||
+          "",
+
+        expected_time:
+          formData.expected_time ||
+          "",
+
+        items:
+          formData.items,
+
+        notes:
+          formData.notes ||
+          "",
+
         created_at:
-          new Date().toISOString()
+          new Date()
+            .toISOString(),
+
+        updated_at:
+          new Date()
+            .toISOString()
       };
 
 
-      const {
-        error
-      } =
-        await db
-          .from("deliveries")
-          .insert(
-            insertPayload
-          );
+      deliveries.unshift(
+        delivery
+      );
 
 
-      if (error) {
-        throw error;
+      if (
+        !saveDeliveries()
+      ) {
+
+        return false;
       }
 
 
@@ -373,8 +482,6 @@ async function saveDelivery(formData) {
       );
     }
 
-
-    await loadDeliveries();
 
     return true;
 
@@ -406,7 +513,8 @@ async function deleteDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -426,30 +534,27 @@ async function deleteDelivery(id) {
       `Delete delivery ${d.reference}?`
     )
   ) {
+
     return;
   }
 
 
   try {
 
-    const {
-      error
-    } =
-      await db
-        .from("deliveries")
-        .delete()
-        .eq(
-          "id",
-          id
-        );
+    deliveries =
+      deliveries.filter(
+        d =>
+          d.id !== id
+      );
 
 
-    if (error) {
-      throw error;
+    if (
+      !saveDeliveries()
+    ) {
+
+      return;
     }
 
-
-    await loadDeliveries();
 
     renderTable();
 
@@ -470,7 +575,6 @@ async function deleteDelivery(id) {
 
 
     toast(
-      error.message ||
       "Unable to delete delivery."
     );
   }
@@ -518,7 +622,10 @@ function badge(status) {
   return `
 
     <span class="badge ${className}">
-      ${escapeHtml(status || "Pending")}
+      ${escapeHtml(
+        status ||
+        "Pending"
+      )}
     </span>
 
   `;
@@ -666,7 +773,9 @@ async function openNew() {
     "Generating...";
 
 
-  showView("new");
+  showView(
+    "new"
+  );
 
 
   const reference =
@@ -690,7 +799,8 @@ function editDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -777,7 +887,9 @@ function editDelivery(id) {
     d.notes || "";
 
 
-  showView("new");
+  showView(
+    "new"
+  );
 }
 
 
@@ -925,7 +1037,9 @@ function renderDashboard() {
             <div class="status-line">
 
               <span>
-                ${escapeHtml(status)}
+                ${escapeHtml(
+                  status
+                )}
               </span>
 
               <div class="bar">
@@ -1205,7 +1319,8 @@ function printDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -1749,7 +1864,7 @@ function exportCsv() {
 
 
 /* =========================================================
-   BACKUP
+   BACKUP TO LOCAL FILE
 ========================================================= */
 
 function backup() {
@@ -1760,11 +1875,29 @@ function backup() {
     );
 
 
+  const backupData = {
+
+    app:
+      "AL JEFOON TENTS — Delivery Management",
+
+    version:
+      "1.0",
+
+    created:
+      new Date()
+        .toISOString(),
+
+    deliveries:
+      data
+
+  };
+
+
   const blob =
     new Blob(
       [
         JSON.stringify(
-          data,
+          backupData,
           null,
           2
         )
@@ -1820,25 +1953,60 @@ function backup() {
 
 
 /* =========================================================
-   RESTORE BACKUP
+   RESTORE LOCAL BACKUP
 ========================================================= */
 
 async function restoreBackup(file) {
 
   try {
 
-    const data =
+    const imported =
       JSON.parse(
         await file.text()
       );
 
 
+    let data;
+
+
+    /*
+      Supports the new backup format.
+    */
+
     if (
-      !Array.isArray(data)
+      imported &&
+      Array.isArray(
+        imported.deliveries
+      )
     ) {
 
+      data =
+        imported.deliveries;
+
+    }
+
+
+    /*
+      Also supports the old backup format
+      where the JSON itself was an array.
+    */
+
+    else if (
+      Array.isArray(
+        imported
+      )
+    ) {
+
+      data =
+        imported;
+
+    }
+
+
+    else {
+
       throw new Error(
-        "Backup must contain an array."
+        "Backup file is not valid."
       );
     }
 
@@ -1857,7 +2025,7 @@ async function restoreBackup(file) {
 
     const confirmed =
       confirm(
-        `Restore ${data.length} deliveries into the database?`
+        `Restore ${data.length} deliveries? This will replace the current local delivery data.`
       );
 
 
@@ -1866,7 +2034,7 @@ async function restoreBackup(file) {
     }
 
 
-    const records =
+    deliveries =
       data.map(
         d => {
 
@@ -1878,13 +2046,17 @@ async function restoreBackup(file) {
 
           return {
 
+            id:
+              item.id ||
+              generateId(),
+
             reference_number:
               item.reference ||
               null,
 
             delivery_date:
               item.date ||
-              null,
+              "",
 
             status:
               item.status ||
@@ -1896,23 +2068,23 @@ async function restoreBackup(file) {
 
             phone:
               item.phone ||
-              null,
+              "",
 
             address:
               item.address ||
-              null,
+              "",
 
             driver:
               item.driver ||
-              null,
+              "",
 
             vehicle:
               item.vehicle ||
-              null,
+              "",
 
             expected_time:
               item.expected_time ||
-              null,
+              "",
 
             items:
               item.items ||
@@ -1920,13 +2092,15 @@ async function restoreBackup(file) {
 
             notes:
               item.notes ||
-              null,
+              "",
 
             created_at:
+              item.created_at ||
               new Date()
                 .toISOString(),
 
             updated_at:
+              item.updated_at ||
               new Date()
                 .toISOString()
           };
@@ -1934,24 +2108,17 @@ async function restoreBackup(file) {
       );
 
 
-    const {
-      error
-    } =
-      await db
-        .from("deliveries")
-        .insert(
-          records
-        );
+    if (
+      !saveDeliveries()
+    ) {
 
-
-    if (error) {
-      throw error;
+      return;
     }
 
 
-    await loadDeliveries();
-
     renderDashboard();
+
+    renderTable();
 
 
     toast(
@@ -2085,8 +2252,6 @@ $("deliveryForm")
             .trim()
       };
 
-
-      /* Browser validation */
 
       if (
         !$("deliveryForm")
@@ -2376,41 +2541,24 @@ $("restoreInput")
    START APPLICATION
 ========================================================= */
 
-async function startApp() {
+function startApp() {
 
-  try {
+  /*
+    No authentication.
+    No email.
+    No password.
+    No Supabase.
+  */
 
-    /*
-      No authentication.
-      No email.
-      No password.
-      The application opens directly.
-    */
-
-
-    await loadDeliveries();
+  loadDeliveries();
 
 
-    renderDashboard();
+  renderDashboard();
 
 
-    showView(
-      "dashboard"
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Application startup error:",
-      error
-    );
-
-
-    toast(
-      "Unable to start application."
-    );
-  }
+  showView(
+    "dashboard"
+  );
 }
 
 
