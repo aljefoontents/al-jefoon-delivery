@@ -1,28 +1,19 @@
-```javascript
 /* =========================================================
    AL JEFOON TENTS
    DELIVERY MANAGEMENT SYSTEM
+   LOCAL VERSION — SUPABASE REMOVED
 ========================================================= */
 
 
 /* =========================================================
-   SUPABASE
+   APPLICATION STORAGE
 ========================================================= */
 
-const SUPABASE_URL =
-  "https://fhgptbaeyvwwgvrdrufu.supabase.co";
+const STORAGE_KEY =
+  "alJefoonDeliveriesV1";
 
-const SUPABASE_KEY =
-  "sb_publishable_qKCf-rC8pKpw7CFvECWWSg_TFVDKLmg";
-
-
-const { createClient } = window.supabase;
-
-const db =
-  createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const DARK_MODE_KEY =
+  "alJefoonDeliveryDarkMode";
 
 
 /* =========================================================
@@ -33,18 +24,45 @@ let deliveries = [];
 
 let editingId = null;
 
-let currentUser = null;
 
-let loginScreenCreated = false;
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const $ = id =>
+  document.getElementById(id);
+
+
+const views = {
+  dashboard: $("dashboardView"),
+  deliveries: $("deliveriesView"),
+  new: $("newView")
+};
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHtml(value = "") {
+
+  return String(value)
+    .replace(
+      /[&<>"']/g,
+      character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character])
+    );
+}
 
 
 /* =========================================================
    DARK MODE
 ========================================================= */
-
-const DARK_MODE_KEY =
-  "alJefoonDeliveryDarkMode";
-
 
 function applyDarkMode() {
 
@@ -61,19 +79,13 @@ function applyDarkMode() {
 
 
   const button =
-    document.getElementById(
-      "darkModeToggle"
-    );
+    $("darkModeToggle");
 
   const text =
-    document.getElementById(
-      "themeToggleText"
-    );
+    $("themeToggleText");
 
   const icon =
-    document.getElementById(
-      "themeToggleIcon"
-    );
+    $("themeToggleIcon");
 
 
   if (enabled) {
@@ -135,449 +147,36 @@ function toggleDarkMode() {
 }
 
 
-applyDarkMode();
-
-
-const darkModeButton =
-  document.getElementById(
-    "darkModeToggle"
-  );
-
-
-if (darkModeButton) {
-
-  darkModeButton.addEventListener(
-    "click",
-    toggleDarkMode
-  );
-}
-
-
 /* =========================================================
-   HELPERS
+   LOAD LOCAL DELIVERIES
 ========================================================= */
 
-const $ = id =>
-  document.getElementById(id);
-
-
-const views = {
-  dashboard: $("dashboardView"),
-  deliveries: $("deliveriesView"),
-  new: $("newView")
-};
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHtml(value = "") {
-
-  return String(value)
-    .replace(
-      /[&<>"']/g,
-      character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[character])
-    );
-}
-
-
-/* =========================================================
-   LOGIN SCREEN
-========================================================= */
-
-function createLoginScreen() {
-
-  if ($("loginScreen")) {
-    return;
-  }
-
-  const screen =
-    document.createElement("div");
-
-  screen.id =
-    "loginScreen";
-
-  screen.innerHTML = `
-
-    <div class="login-background">
-      <div class="login-circle"></div>
-    </div>
-
-    <div class="login-card">
-
-      <div class="login-logo">
-        <img
-          src="logo.png"
-          alt="AL JEFOON TENTS"
-        >
-      </div>
-
-      <div class="login-heading">
-
-        <h1>
-          AL JEFOON TENTS
-        </h1>
-
-        <p>
-          Delivery Management System
-        </p>
-
-      </div>
-
-      <form
-        id="loginForm"
-        class="login-form"
-      >
-
-        <label>
-
-          <span>
-            Email
-          </span>
-
-          <input
-            id="loginEmail"
-            type="email"
-            required
-            autocomplete="username"
-            placeholder="Enter your email"
-          >
-
-        </label>
-
-
-        <label>
-
-          <span>
-            Password
-          </span>
-
-          <input
-            id="loginPassword"
-            type="password"
-            required
-            autocomplete="current-password"
-            placeholder="Enter your password"
-          >
-
-        </label>
-
-
-        <div
-          id="loginError"
-          class="login-error"
-        ></div>
-
-
-        <button
-          type="submit"
-          id="loginButton"
-          class="login-button"
-        >
-          Sign In
-        </button>
-
-      </form>
-
-    </div>
-  `;
-
-  document.body.appendChild(screen);
-
-  loginScreenCreated = true;
-
-  $("loginForm")
-    .addEventListener(
-      "submit",
-      login
-    );
-}
-
-
-/* =========================================================
-   LOGIN
-========================================================= */
-
-async function login(event) {
-
-  event.preventDefault();
-
-  const email =
-    $("loginEmail")
-      .value
-      .trim();
-
-  const password =
-    $("loginPassword")
-      .value;
-
-  const button =
-    $("loginButton");
-
-  const errorBox =
-    $("loginError");
-
-  errorBox.style.display =
-    "none";
-
-  button.disabled = true;
-
-  button.textContent =
-    "Signing in...";
+function loadDeliveries() {
 
   try {
 
-    const {
-      data,
-      error
-    } =
-      await db.auth.signInWithPassword({
-        email,
-        password
-      });
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    currentUser =
-      data.user;
-
-
-    if ($("loginScreen")) {
-      $("loginScreen")
-        .style
-        .display = "none";
-    }
-
-
-    const shell =
-      document.querySelector(
-        ".app-shell"
+    const saved =
+      localStorage.getItem(
+        STORAGE_KEY
       );
 
-    if (shell) {
-      shell.style.display =
-        "flex";
+
+    if (!saved) {
+
+      deliveries = [];
+
+      return;
     }
 
 
-    await loadDeliveries();
-
-    addLogoutButton();
-
-    renderDashboard();
-
-    showView("dashboard");
-
-
-  } catch (error) {
-
-    console.error(
-      "Login error:",
-      error
-    );
-
-    errorBox.textContent =
-      error.message ||
-      "Unable to sign in.";
-
-    errorBox.style.display =
-      "block";
-
-  } finally {
-
-    button.disabled =
-      false;
-
-    button.textContent =
-      "Sign In";
-  }
-}
-
-
-/* =========================================================
-   LOGOUT BUTTON
-========================================================= */
-
-function addLogoutButton() {
-
-  const footer =
-    document.querySelector(
-      ".sidebar-footer"
-    );
-
-  if (!footer) {
-    return;
-  }
-
-
-  const existing =
-    $("logoutButton");
-
-  if (existing) {
-    existing.remove();
-  }
-
-
-  const logout =
-    document.createElement(
-      "button"
-    );
-
-  logout.id =
-    "logoutButton";
-
-  logout.type =
-    "button";
-
-  logout.textContent =
-    "Sign Out";
-
-
-  logout.style.cssText = `
-    width:100%;
-    margin-top:14px;
-    padding:9px 12px;
-    border:1px solid var(--border);
-    border-radius:7px;
-    background:#ffffff;
-    color:#444;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
-  `;
-
-
-  logout.onclick =
-    logoutUser;
-
-
-  footer.appendChild(logout);
-}
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logoutUser() {
-
-  try {
-
-    await db.auth.signOut();
-
-  } catch (error) {
-
-    console.error(
-      "Logout error:",
-      error
-    );
-
-  } finally {
-
-    currentUser = null;
-
-    deliveries = [];
-
-    editingId = null;
-
-
-    const shell =
-      document.querySelector(
-        ".app-shell"
-      );
-
-    if (shell) {
-      shell.style.display =
-        "none";
-    }
-
-
-    if ($("logoutButton")) {
-      $("logoutButton").remove();
-    }
-
-
-    if ($("loginScreen")) {
-
-      $("loginScreen")
-        .style
-        .display = "flex";
-
-
-      $("loginEmail").value =
-        "";
-
-      $("loginPassword").value =
-        "";
-
-      $("loginError")
-        .style
-        .display = "none";
-
-
-      $("loginButton")
-        .disabled = false;
-
-      $("loginButton")
-        .textContent =
-        "Sign In";
-    }
-  }
-}
-
-
-/* =========================================================
-   LOAD DELIVERIES
-========================================================= */
-
-async function loadDeliveries() {
-
-  if (!currentUser) {
-    return false;
-  }
-
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await db
-        .from("deliveries")
-        .select("*")
-        .eq(
-          "user_id",
-          currentUser.id
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
-
-    if (error) {
-      throw error;
-    }
+    const data =
+      JSON.parse(saved);
 
 
     deliveries =
-      data || [];
-
-    return true;
+      Array.isArray(data)
+        ? data
+        : [];
 
 
   } catch (error) {
@@ -587,8 +186,41 @@ async function loadDeliveries() {
       error
     );
 
+    deliveries = [];
+
     toast(
-      "Unable to load deliveries."
+      "Unable to load saved deliveries."
+    );
+  }
+}
+
+
+/* =========================================================
+   SAVE LOCAL DELIVERIES
+========================================================= */
+
+function saveLocalData() {
+
+  try {
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(
+        deliveries
+      )
+    );
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Storage error:",
+      error
+    );
+
+    toast(
+      "Unable to save delivery data."
     );
 
     return false;
@@ -660,10 +292,6 @@ function normalizeDelivery(d) {
 
     updated_at:
       d.updated_at ||
-      null,
-
-    user_id:
-      d.user_id ||
       null
   };
 }
@@ -673,7 +301,7 @@ function normalizeDelivery(d) {
    GENERATE REFERENCE
 ========================================================= */
 
-async function nextRef() {
+function nextRef() {
 
   const year =
     new Date()
@@ -694,10 +322,11 @@ async function nextRef() {
 
 
       const match =
-        String(d.reference)
-          .match(
-            /^AJT-DEL-(\d{4})-(\d+)$/
-          );
+        String(
+          d.reference
+        ).match(
+          /^AJT-DEL-(\d{4})-(\d+)$/
+        );
 
 
       if (
@@ -737,119 +366,169 @@ async function nextRef() {
    SAVE DELIVERY
 ========================================================= */
 
-async function saveDelivery(formData) {
+function saveDelivery(formData) {
 
-  if (!currentUser) {
-
-    toast(
-      "Please sign in first."
-    );
-
-    return false;
-  }
-
-
-  const payload = {
-
-    delivery_date:
-      formData.date,
-
-    status:
-      formData.status,
-
-    customer_name:
-      formData.customer,
-
-    phone:
-      formData.phone || null,
-
-    address:
-      formData.address || null,
-
-    driver:
-      formData.driver || null,
-
-    vehicle:
-      formData.vehicle || null,
-
-    expected_time:
-      formData.expected_time || null,
-
-    items:
-      formData.items,
-
-    notes:
-      formData.notes || null,
-
-    updated_at:
-      new Date().toISOString()
-  };
+  const now =
+    new Date().toISOString();
 
 
   try {
 
     if (editingId) {
 
-      const {
-        error
-      } =
-        await db
-          .from("deliveries")
-          .update(payload)
-          .eq(
-            "id",
+      const index =
+        deliveries.findIndex(
+          d =>
+            d.id ===
             editingId
-          )
-          .eq(
-            "user_id",
-            currentUser.id
-          );
+        );
 
 
-      if (error) {
-        throw error;
+      if (index === -1) {
+
+        toast(
+          "Delivery could not be found."
+        );
+
+        return false;
+      }
+
+
+      const existing =
+        normalizeDelivery(
+          deliveries[index]
+        );
+
+
+      deliveries[index] = {
+
+        id:
+          existing.id,
+
+        reference_number:
+          existing.reference,
+
+        delivery_date:
+          formData.date,
+
+        status:
+          formData.status,
+
+        customer_name:
+          formData.customer,
+
+        phone:
+          formData.phone ||
+          "",
+
+        address:
+          formData.address ||
+          "",
+
+        driver:
+          formData.driver ||
+          "",
+
+        vehicle:
+          formData.vehicle ||
+          "",
+
+        expected_time:
+          formData.expected_time ||
+          "",
+
+        items:
+          formData.items ||
+          "",
+
+        notes:
+          formData.notes ||
+          "",
+
+        created_at:
+          existing.created_at ||
+          now,
+
+        updated_at:
+          now
+      };
+
+
+      if (!saveLocalData()) {
+        return false;
       }
 
 
       toast(
         "Delivery updated successfully."
       );
-    }
 
-
-    else {
+    } else {
 
       const reference =
-        await nextRef();
+        nextRef();
 
 
-      const insertPayload = {
+      const delivery = {
 
-        ...payload,
+        id:
+          generateId(),
 
         reference_number:
           reference,
 
-        user_id:
-          currentUser.id,
+        delivery_date:
+          formData.date,
+
+        status:
+          formData.status,
+
+        customer_name:
+          formData.customer,
+
+        phone:
+          formData.phone ||
+          "",
+
+        address:
+          formData.address ||
+          "",
+
+        driver:
+          formData.driver ||
+          "",
+
+        vehicle:
+          formData.vehicle ||
+          "",
+
+        expected_time:
+          formData.expected_time ||
+          "",
+
+        items:
+          formData.items ||
+          "",
+
+        notes:
+          formData.notes ||
+          "",
 
         created_at:
-          new Date().toISOString()
+          now,
+
+        updated_at:
+          now
       };
 
 
-      const {
-        error
-      } =
-        await db
-          .from("deliveries")
-          .insert(
-            insertPayload
-          );
+      deliveries.unshift(
+        delivery
+      );
 
 
-      if (error) {
-        throw error;
+      if (!saveLocalData()) {
+        return false;
       }
 
 
@@ -858,8 +537,6 @@ async function saveDelivery(formData) {
       );
     }
 
-
-    await loadDeliveries();
 
     return true;
 
@@ -872,20 +549,10 @@ async function saveDelivery(formData) {
     );
 
 
-    let message =
-      "Unable to save delivery.";
+    toast(
+      "Unable to save delivery."
+    );
 
-
-    if (
-      error &&
-      error.message
-    ) {
-      message =
-        error.message;
-    }
-
-
-    toast(message);
 
     return false;
   }
@@ -893,19 +560,30 @@ async function saveDelivery(formData) {
 
 
 /* =========================================================
+   GENERATE UNIQUE ID
+========================================================= */
+
+function generateId() {
+
+  return (
+    Date.now().toString(36) +
+    Math.random()
+      .toString(36)
+      .substring(2, 9)
+  );
+}
+
+
+/* =========================================================
    DELETE DELIVERY
 ========================================================= */
 
-async function deleteDelivery(id) {
-
-  if (!currentUser) {
-    return;
-  }
-
+function deleteDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -929,54 +607,26 @@ async function deleteDelivery(id) {
   }
 
 
-  try {
-
-    const {
-      error
-    } =
-      await db
-        .from("deliveries")
-        .delete()
-        .eq(
-          "id",
-          id
-        )
-        .eq(
-          "user_id",
-          currentUser.id
-        );
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    await loadDeliveries();
-
-    renderTable();
-
-    renderDashboard();
-
-
-    toast(
-      "Delivery deleted successfully."
+  deliveries =
+    deliveries.filter(
+      item =>
+        item.id !== id
     );
 
 
-  } catch (error) {
-
-    console.error(
-      "Delete error:",
-      error
-    );
-
-
-    toast(
-      error.message ||
-      "Unable to delete delivery."
-    );
+  if (!saveLocalData()) {
+    return;
   }
+
+
+  renderTable();
+
+  renderDashboard();
+
+
+  toast(
+    "Delivery deleted successfully."
+  );
 }
 
 
@@ -994,22 +644,23 @@ function badge(status) {
     status ===
     "Out for Delivery"
   ) {
+
     className =
       "out";
-  }
 
-  else if (
+  } else if (
     status ===
     "Delivered"
   ) {
+
     className =
       "delivered";
-  }
 
-  else if (
+  } else if (
     status ===
     "Cancelled"
   ) {
+
     className =
       "cancelled";
   }
@@ -1018,7 +669,10 @@ function badge(status) {
   return `
 
     <span class="badge ${className}">
-      ${escapeHtml(status || "Pending")}
+      ${escapeHtml(
+        status ||
+        "Pending"
+      )}
     </span>
 
   `;
@@ -1089,20 +743,27 @@ function showView(name) {
   };
 
 
-  $("pageTitle")
-    .textContent =
-    titles[name][0];
+  if ($("pageTitle")) {
+
+    $("pageTitle")
+      .textContent =
+      titles[name][0];
+  }
 
 
-  $("pageSubtitle")
-    .textContent =
-    titles[name][1];
+  if ($("pageSubtitle")) {
+
+    $("pageSubtitle")
+      .textContent =
+      titles[name][1];
+  }
 
 
   if (
     name ===
     "dashboard"
   ) {
+
     renderDashboard();
   }
 
@@ -1111,6 +772,7 @@ function showView(name) {
     name ===
     "deliveries"
   ) {
+
     renderTable();
   }
 }
@@ -1120,7 +782,7 @@ function showView(name) {
    OPEN NEW DELIVERY
 ========================================================= */
 
-async function openNew() {
+function openNew() {
 
   editingId =
     null;
@@ -1135,48 +797,57 @@ async function openNew() {
   }
 
 
-  $("editingId")
-    .value = "";
+  if ($("editingId")) {
+
+    $("editingId")
+      .value = "";
+  }
 
 
-  $("deliveryDate")
-    .value =
-    new Date()
-      .toISOString()
-      .slice(
-        0,
-        10
-      );
+  if ($("deliveryDate")) {
+
+    const today =
+      new Date()
+        .toISOString()
+        .slice(
+          0,
+          10
+        );
 
 
-  $("status")
-    .value =
-    "Pending";
+    $("deliveryDate")
+      .value =
+      today;
+  }
 
 
-  $("formTitle")
-    .textContent =
-    "Create New Delivery";
+  if ($("status")) {
+
+    $("status")
+      .value =
+      "Pending";
+  }
 
 
-  $("refPreview")
-    .textContent =
-    "Generating...";
+  if ($("formTitle")) {
+
+    $("formTitle")
+      .textContent =
+      "Create New Delivery";
+  }
 
 
-  showView("new");
-
-
-  const reference =
-    await nextRef();
-
-
-  if (!editingId) {
+  if ($("refPreview")) {
 
     $("refPreview")
       .textContent =
-      reference;
+      nextRef();
   }
+
+
+  showView(
+    "new"
+  );
 }
 
 
@@ -1188,7 +859,8 @@ function editDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -1207,75 +879,116 @@ function editDelivery(id) {
     id;
 
 
-  $("editingId")
-    .value =
-    id;
+  if ($("editingId")) {
+
+    $("editingId")
+      .value =
+      id;
+  }
 
 
-  $("formTitle")
-    .textContent =
-    "Edit Delivery";
+  if ($("formTitle")) {
+
+    $("formTitle")
+      .textContent =
+      "Edit Delivery";
+  }
 
 
-  $("refPreview")
-    .textContent =
-    d.reference ||
-    "Delivery";
+  if ($("refPreview")) {
+
+    $("refPreview")
+      .textContent =
+      d.reference ||
+      "Delivery";
+  }
 
 
-  $("deliveryDate")
-    .value =
-    d.date || "";
+  if ($("deliveryDate")) {
+
+    $("deliveryDate")
+      .value =
+      d.date || "";
+  }
 
 
-  $("status")
-    .value =
-    d.status ||
-    "Pending";
+  if ($("status")) {
+
+    $("status")
+      .value =
+      d.status ||
+      "Pending";
+  }
 
 
-  $("customer")
-    .value =
-    d.customer || "";
+  if ($("customer")) {
+
+    $("customer")
+      .value =
+      d.customer || "";
+  }
 
 
-  $("phone")
-    .value =
-    d.phone || "";
+  if ($("phone")) {
+
+    $("phone")
+      .value =
+      d.phone || "";
+  }
 
 
-  $("address")
-    .value =
-    d.address || "";
+  if ($("address")) {
+
+    $("address")
+      .value =
+      d.address || "";
+  }
 
 
-  $("driver")
-    .value =
-    d.driver || "";
+  if ($("driver")) {
+
+    $("driver")
+      .value =
+      d.driver || "";
+  }
 
 
-  $("vehicle")
-    .value =
-    d.vehicle || "";
+  if ($("vehicle")) {
+
+    $("vehicle")
+      .value =
+      d.vehicle || "";
+  }
 
 
-  $("expectedTime")
-    .value =
-    d.expected_time ||
-    "";
+  if ($("expectedTime")) {
+
+    $("expectedTime")
+      .value =
+      d.expected_time ||
+      "";
+  }
 
 
-  $("items")
-    .value =
-    d.items || "";
+  if ($("items")) {
+
+    $("items")
+      .value =
+      d.items || "";
+  }
 
 
-  $("notes")
-    .value =
-    d.notes || "";
+  if ($("notes")) {
+
+    $("notes")
+      .value =
+      d.notes || "";
+  }
 
 
-  showView("new");
+  showView(
+    "new"
+  );
 }
 
 
@@ -1319,24 +1032,36 @@ function renderDashboard() {
     ).length;
 
 
-  $("statTotal")
-    .textContent =
-    total;
+  if ($("statTotal")) {
+
+    $("statTotal")
+      .textContent =
+      total;
+  }
 
 
-  $("statPending")
-    .textContent =
-    pending;
+  if ($("statPending")) {
+
+    $("statPending")
+      .textContent =
+      pending;
+  }
 
 
-  $("statOut")
-    .textContent =
-    out;
+  if ($("statOut")) {
+
+    $("statOut")
+      .textContent =
+      out;
+  }
 
 
-  $("statDelivered")
-    .textContent =
-    delivered;
+  if ($("statDelivered")) {
+
+    $("statDelivered")
+      .textContent =
+      delivered;
+  }
 
 
   const recent =
@@ -1357,90 +1082,107 @@ function renderDashboard() {
       );
 
 
-  $("recentTable")
-    .innerHTML =
-    recent.length
-      ? recent
-          .map(
-            rowHtml
-          )
-          .join("")
-      : `
+  if ($("recentTable")) {
 
-        <tr>
+    $("recentTable")
+      .innerHTML =
+      recent.length
+        ? recent
+            .map(
+              rowHtml
+            )
+            .join("")
+        : `
 
-          <td
-            colspan="6"
-            class="empty"
-          >
-            No deliveries yet.
-          </td>
+          <tr>
 
-        </tr>
-      `;
+            <td
+              colspan="6"
+              class="empty"
+            >
+              No deliveries yet.
+            </td>
+
+          </tr>
+        `;
+  }
 
 
   const statuses = [
+
     "Pending",
+
     "Out for Delivery",
+
     "Delivered",
+
     "Cancelled"
+
   ];
 
 
-  $("statusOverview")
-    .innerHTML =
-    statuses
-      .map(
-        status => {
+  if ($("statusOverview")) {
 
-          const count =
-            normalized.filter(
-              d =>
-                d.status ===
-                status
-            ).length;
+    $("statusOverview")
+      .innerHTML =
+      statuses
+        .map(
+          status => {
 
-
-          const percentage =
-            total
-              ? Math.max(
-                  count
-                    ? 3
-                    : 0,
-                  (
-                    count /
-                    total
-                  ) *
-                  100
-                )
-              : 0;
+            const count =
+              normalized.filter(
+                d =>
+                  d.status ===
+                  status
+              ).length;
 
 
-          return `
+            const percentage =
+              total
+                ? Math.max(
+                    count
+                      ? 3
+                      : 0,
 
-            <div class="status-line">
+                    (
+                      count /
+                      total
+                    ) *
+                    100
+                  )
 
-              <span>
-                ${escapeHtml(status)}
-              </span>
+                : 0;
 
-              <div class="bar">
-                <i
-                  style="width:${percentage}%"
-                ></i>
+
+            return `
+
+              <div class="status-line">
+
+                <span>
+                  ${escapeHtml(
+                    status
+                  )}
+                </span>
+
+                <div class="bar">
+
+                  <i
+                    style="width:${percentage}%"
+                  ></i>
+
+                </div>
+
+                <b>
+                  ${count}
+                </b>
+
               </div>
 
-              <b>
-                ${count}
-              </b>
-
-            </div>
-
-          `;
-        }
-      )
-      .join("");
+            `;
+          }
+        )
+        .join("");
+  }
 }
 
 
@@ -1497,7 +1239,7 @@ function rowHtml(d) {
           <button
             class="icon-btn"
             type="button"
-            onclick="editDelivery('${d.id}')"
+            onclick="editDelivery('${escapeHtml(d.id)}')"
           >
             Edit
           </button>
@@ -1505,7 +1247,7 @@ function rowHtml(d) {
           <button
             class="icon-btn"
             type="button"
-            onclick="printDelivery('${d.id}')"
+            onclick="printDelivery('${escapeHtml(d.id)}')"
           >
             Print
           </button>
@@ -1569,12 +1311,19 @@ function renderTable() {
           return [
 
             d.reference,
+
             d.customer,
+
             d.phone,
+
             d.driver,
+
             d.vehicle,
+
             d.address,
+
             d.items,
+
             d.notes
 
           ]
@@ -1596,101 +1345,107 @@ function renderTable() {
       );
 
 
-  $("allTable")
-    .innerHTML =
-    rows
-      .map(
-        d => `
+  if ($("allTable")) {
 
-          <tr>
+    $("allTable")
+      .innerHTML =
+      rows
+        .map(
+          d => `
 
-            <td>
-              <b>
+            <tr>
+
+              <td>
+                <b>
+                  ${escapeHtml(
+                    d.reference ||
+                    "—"
+                  )}
+                </b>
+              </td>
+
+              <td>
                 ${escapeHtml(
-                  d.reference ||
+                  d.date ||
                   "—"
                 )}
-              </b>
-            </td>
+              </td>
 
-            <td>
-              ${escapeHtml(
-                d.date ||
-                "—"
-              )}
-            </td>
+              <td>
+                ${escapeHtml(
+                  d.customer ||
+                  "—"
+                )}
+              </td>
 
-            <td>
-              ${escapeHtml(
-                d.customer ||
-                "—"
-              )}
-            </td>
+              <td>
+                ${escapeHtml(
+                  d.phone ||
+                  "—"
+                )}
+              </td>
 
-            <td>
-              ${escapeHtml(
-                d.phone ||
-                "—"
-              )}
-            </td>
+              <td>
+                ${escapeHtml(
+                  d.driver ||
+                  "—"
+                )}
+              </td>
 
-            <td>
-              ${escapeHtml(
-                d.driver ||
-                "—"
-              )}
-            </td>
+              <td>
+                ${badge(
+                  d.status
+                )}
+              </td>
 
-            <td>
-              ${badge(
-                d.status
-              )}
-            </td>
+              <td>
 
-            <td>
+                <div class="row-actions">
 
-              <div class="row-actions">
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    onclick="editDelivery('${escapeHtml(d.id)}')"
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="editDelivery('${d.id}')"
-                >
-                  Edit
-                </button>
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    onclick="printDelivery('${escapeHtml(d.id)}')"
+                  >
+                    Print
+                  </button>
 
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="printDelivery('${d.id}')"
-                >
-                  Print
-                </button>
+                  <button
+                    class="icon-btn"
+                    type="button"
+                    onclick="deleteDelivery('${escapeHtml(d.id)}')"
+                  >
+                    Delete
+                  </button>
 
-                <button
-                  class="icon-btn"
-                  type="button"
-                  onclick="deleteDelivery('${d.id}')"
-                >
-                  Delete
-                </button>
+                </div>
 
-              </div>
+              </td>
 
-            </td>
+            </tr>
 
-          </tr>
-
-        `
-      )
-      .join("");
+          `
+        )
+        .join("");
+  }
 
 
-  $("emptyState")
-    .classList.toggle(
-      "hidden",
-      rows.length > 0
-    );
+  if ($("emptyState")) {
+
+    $("emptyState")
+      .classList.toggle(
+        "hidden",
+        rows.length > 0
+      );
+  }
 }
 
 
@@ -1702,7 +1457,8 @@ function printDelivery(id) {
 
   const raw =
     deliveries.find(
-      d => d.id === id
+      d =>
+        d.id === id
     );
 
 
@@ -2226,7 +1982,9 @@ function exportCsv() {
     "al-jefoon-deliveries.csv";
 
 
-  document.body.appendChild(a);
+  document.body.appendChild(
+    a
+  );
 
   a.click();
 
@@ -2296,7 +2054,9 @@ function backup() {
       )}.json`;
 
 
-  document.body.appendChild(a);
+  document.body.appendChild(
+    a
+  );
 
   a.click();
 
@@ -2320,16 +2080,6 @@ function backup() {
 
 async function restoreBackup(file) {
 
-  if (!currentUser) {
-
-    toast(
-      "Please sign in first."
-    );
-
-    return;
-  }
-
-
   try {
 
     const data =
@@ -2341,6 +2091,7 @@ async function restoreBackup(file) {
     if (
       !Array.isArray(data)
     ) {
+
       throw new Error(
         "Backup must contain an array."
       );
@@ -2361,13 +2112,22 @@ async function restoreBackup(file) {
 
     const confirmed =
       confirm(
-        `Restore ${data.length} deliveries into the database?`
+        `Restore ${data.length} deliveries?`
       );
 
 
     if (!confirmed) {
       return;
     }
+
+
+    const existingIds =
+      new Set(
+        deliveries.map(
+          d =>
+            d.id
+        )
+      );
 
 
     const records =
@@ -2380,85 +2140,117 @@ async function restoreBackup(file) {
             );
 
 
+          let id =
+            item.id ||
+            generateId();
+
+
+          while (
+            existingIds.has(id)
+          ) {
+
+            id =
+              generateId();
+          }
+
+
+          existingIds.add(id);
+
+
+          const now =
+            new Date()
+              .toISOString();
+
+
           return {
 
+            id:
+
+              id,
+
             reference_number:
+
               item.reference ||
               null,
 
             delivery_date:
+
               item.date ||
               null,
 
             status:
+
               item.status ||
               "Pending",
 
             customer_name:
+
               item.customer ||
               "",
 
             phone:
+
               item.phone ||
-              null,
+              "",
 
             address:
+
               item.address ||
-              null,
+              "",
 
             driver:
+
               item.driver ||
-              null,
+              "",
 
             vehicle:
+
               item.vehicle ||
-              null,
+              "",
 
             expected_time:
+
               item.expected_time ||
-              null,
+              "",
 
             items:
+
               item.items ||
               "",
 
             notes:
-              item.notes ||
-              null,
 
-            user_id:
-              currentUser.id,
+              item.notes ||
+              "",
 
             created_at:
-              new Date()
-                .toISOString(),
+
+              item.created_at ||
+              now,
 
             updated_at:
-              new Date()
-                .toISOString()
+
+              now
           };
         }
       );
 
 
-    const {
-      error
-    } =
-      await db
-        .from("deliveries")
-        .insert(
-          records
-        );
+    deliveries =
+      [
+        ...records,
+        ...deliveries
+      ];
 
 
-    if (error) {
-      throw error;
+    if (!saveLocalData()) {
+      return;
     }
 
 
-    await loadDeliveries();
-
     renderDashboard();
+
+    renderTable();
 
 
     toast(
@@ -2526,521 +2318,509 @@ function toast(message) {
 
 
 /* =========================================================
-   DELIVERY FORM SUBMIT
+   INITIALIZE APPLICATION
 ========================================================= */
 
-$("deliveryForm")
-  .addEventListener(
-    "submit",
-    async event => {
+function initApp() {
 
-      event.preventDefault();
+  /* -------------------------------------------------------
+     LOAD SAVED DATA
+  ------------------------------------------------------- */
 
+  loadDeliveries();
 
-      const button =
-        $("saveDeliveryBtn");
 
-
-      if (
-        !currentUser
-      ) {
-
-        toast(
-          "Please sign in first."
-        );
-
-        return;
-      }
-
-
-      const data = {
-
-        date:
-          $("deliveryDate")
-            .value,
-
-        status:
-          $("status")
-            .value,
-
-        customer:
-          $("customer")
-            .value
-            .trim(),
-
-        phone:
-          $("phone")
-            .value
-            .trim(),
-
-        address:
-          $("address")
-            .value
-            .trim(),
-
-        driver:
-          $("driver")
-            .value
-            .trim(),
-
-        vehicle:
-          $("vehicle")
-            .value
-            .trim(),
-
-        expected_time:
-          $("expectedTime")
-            .value ||
-          null,
-
-        items:
-          $("items")
-            .value
-            .trim(),
-
-        notes:
-          $("notes")
-            .value
-            .trim()
-      };
-
-
-      if (
-        !$("deliveryForm")
-          .checkValidity()
-      ) {
-
-        $("deliveryForm")
-          .reportValidity();
-
-        return;
-      }
-
-
-      button.disabled =
-        true;
-
-      button.innerHTML =
-        "<span>⏳</span> Saving...";
-
-
-      try {
-
-        const saved =
-          await saveDelivery(
-            data
-          );
-
-
-        if (!saved) {
-          return;
-        }
-
-
-        editingId =
-          null;
-
-
-        $("deliveryForm")
-          .reset();
-
-
-        showView(
-          "dashboard"
-        );
-
-
-      } finally {
-
-        button.disabled =
-          false;
-
-        button.innerHTML =
-          "<span>✓</span> Save Delivery";
-      }
-    }
-  );
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-document
-  .querySelectorAll(
-    ".nav-btn"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const view =
-            button.dataset.view;
-
-
-          if (
-            view ===
-            "new"
-          ) {
-
-            openNew();
-
-          } else {
-
-            showView(
-              view
-            );
-          }
-        }
-      );
-    }
-  );
-
-
-/* =========================================================
-   TOP NEW BUTTON
-========================================================= */
-
-$("topNewBtn")
-  .addEventListener(
-    "click",
-    openNew
-  );
-
-
-/* =========================================================
-   TABLE NEW BUTTON
-========================================================= */
-
-$("tableNewBtn")
-  .addEventListener(
-    "click",
-    openNew
-  );
-
-
-/* =========================================================
-   VIEW ALL
-========================================================= */
-
-$("viewAllBtn")
-  .addEventListener(
-    "click",
-    () =>
-      showView(
-        "deliveries"
-      )
-  );
-
-
-/* =========================================================
-   CANCEL FORM
-========================================================= */
-
-$("cancelForm")
-  .addEventListener(
-    "click",
-    () => {
-
-      editingId =
-        null;
-
-      showView(
-        "dashboard"
-      );
-    }
-  );
-
-
-/* =========================================================
-   QUICK ACTIONS
-========================================================= */
-
-document
-  .querySelectorAll(
-    "[data-action]"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const action =
-            button.dataset.action;
-
-
-          if (
-            action ===
-            "new"
-          ) {
-
-            openNew();
-
-          } else {
-
-            showView(
-              "deliveries"
-            );
-          }
-        }
-      );
-    }
-  );
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-$("searchInput")
-  .addEventListener(
-    "input",
-    renderTable
-  );
-
-
-/* =========================================================
-   STATUS FILTER
-========================================================= */
-
-$("statusFilter")
-  .addEventListener(
-    "change",
-    renderTable
-  );
-
-
-/* =========================================================
-   CLEAR FILTERS
-========================================================= */
-
-$("clearFilters")
-  .addEventListener(
-    "click",
-    () => {
-
-      $("searchInput")
-        .value = "";
-
-      $("statusFilter")
-        .value = "";
-
-      renderTable();
-    }
-  );
-
-
-/* =========================================================
-   EXPORT
-========================================================= */
-
-$("exportCsvBtn")
-  .addEventListener(
-    "click",
-    exportCsv
-  );
-
-
-/* =========================================================
-   BACKUP
-========================================================= */
-
-$("backupBtn")
-  .addEventListener(
-    "click",
-    backup
-  );
-
-
-/* =========================================================
-   RESTORE
-========================================================= */
-
-$("restoreInput")
-  .addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files[0];
-
-
-      if (file) {
-
-        restoreBackup(
-          file
-        );
-      }
-
-
-      event.target.value =
-        "";
-    }
-  );
-
-
-/* =========================================================
-   START APPLICATION
-========================================================= */
-
-async function startApp() {
-
-  const shell =
-    document.querySelector(
-      ".app-shell"
-    );
-
-
-  if (shell) {
-    shell.style.display =
-      "none";
-  }
-
-
-  createLoginScreen();
-
-
-  /* Re-apply saved theme after login screen creation */
+  /* -------------------------------------------------------
+     APPLY DARK MODE
+  ------------------------------------------------------- */
 
   applyDarkMode();
 
 
-  try {
+  /* -------------------------------------------------------
+     DARK MODE BUTTON
+  ------------------------------------------------------- */
 
-    const {
-      data,
-      error
-    } =
-      await db.auth.getSession();
-
-
-    if (error) {
-      throw error;
-    }
+  const darkModeButton =
+    $("darkModeToggle");
 
 
-    const session =
-      data.session;
+  if (darkModeButton) {
 
-
-    if (session) {
-
-      currentUser =
-        session.user;
-
-
-      $("loginScreen")
-        .style
-        .display =
-        "none";
-
-
-      if (shell) {
-        shell.style.display =
-          "flex";
-      }
-
-
-      await loadDeliveries();
-
-      addLogoutButton();
-
-      renderDashboard();
-
-      showView(
-        "dashboard"
-      );
-
-
-    } else {
-
-      $("loginScreen")
-        .style
-        .display =
-        "flex";
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "Application startup error:",
-      error
+    darkModeButton.addEventListener(
+      "click",
+      toggleDarkMode
     );
-
-
-    if ($("loginScreen")) {
-
-      $("loginScreen")
-        .style
-        .display =
-        "flex";
-    }
   }
 
 
-  /* =====================================================
-     AUTH STATE LISTENER
-  ===================================================== */
+  /* -------------------------------------------------------
+     DELIVERY FORM
+  ------------------------------------------------------- */
 
-  db.auth.onAuthStateChange(
-    (event, session) => {
+  const deliveryForm =
+    $("deliveryForm");
 
-      if (
-        event ===
-        "SIGNED_OUT"
-      ) {
 
-        currentUser =
-          null;
+  if (deliveryForm) {
 
-        deliveries =
-          [];
+    deliveryForm.addEventListener(
+      "submit",
+      event => {
+
+        event.preventDefault();
+
+
+        const button =
+          $("saveDeliveryBtn");
+
+
+        const data = {
+
+          date:
+            $("deliveryDate")
+              ? $("deliveryDate").value
+              : "",
+
+          status:
+            $("status")
+              ? $("status").value
+              : "Pending",
+
+          customer:
+            $("customer")
+              ? $("customer")
+                  .value
+                  .trim()
+              : "",
+
+          phone:
+            $("phone")
+              ? $("phone")
+                  .value
+                  .trim()
+              : "",
+
+          address:
+            $("address")
+              ? $("address")
+                  .value
+                  .trim()
+              : "",
+
+          driver:
+            $("driver")
+              ? $("driver")
+                  .value
+                  .trim()
+              : "",
+
+          vehicle:
+            $("vehicle")
+              ? $("vehicle")
+                  .value
+                  .trim()
+              : "",
+
+          expected_time:
+            $("expectedTime")
+              ? $("expectedTime").value
+              : "",
+
+          items:
+            $("items")
+              ? $("items")
+                  .value
+                  .trim()
+              : "",
+
+          notes:
+            $("notes")
+              ? $("notes")
+                  .value
+                  .trim()
+              : ""
+        };
+
+
+        if (
+          !deliveryForm.checkValidity()
+        ) {
+
+          deliveryForm.reportValidity();
+
+          return;
+        }
+
+
+        if (button) {
+
+          button.disabled =
+            true;
+
+          button.innerHTML =
+            "<span>⏳</span> Saving...";
+        }
+
+
+        try {
+
+          const saved =
+            saveDelivery(
+              data
+            );
+
+
+          if (!saved) {
+            return;
+          }
+
+
+          editingId =
+            null;
+
+
+          deliveryForm.reset();
+
+
+          showView(
+            "dashboard"
+          );
+
+
+        } finally {
+
+          if (button) {
+
+            button.disabled =
+              false;
+
+            button.innerHTML =
+              "<span>✓</span> Save Delivery";
+          }
+        }
+      }
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     NAVIGATION
+  ------------------------------------------------------- */
+
+  document
+    .querySelectorAll(
+      ".nav-btn"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const view =
+              button.dataset.view;
+
+
+            if (
+              view ===
+              "new"
+            ) {
+
+              openNew();
+
+            } else {
+
+              showView(
+                view
+              );
+            }
+          }
+        );
+      }
+    );
+
+
+  /* -------------------------------------------------------
+     TOP NEW BUTTON
+  ------------------------------------------------------- */
+
+  const topNewBtn =
+    $("topNewBtn");
+
+
+  if (topNewBtn) {
+
+    topNewBtn.addEventListener(
+      "click",
+      openNew
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     TABLE NEW BUTTON
+  ------------------------------------------------------- */
+
+  const tableNewBtn =
+    $("tableNewBtn");
+
+
+  if (tableNewBtn) {
+
+    tableNewBtn.addEventListener(
+      "click",
+      openNew
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     VIEW ALL
+  ------------------------------------------------------- */
+
+  const viewAllBtn =
+    $("viewAllBtn");
+
+
+  if (viewAllBtn) {
+
+    viewAllBtn.addEventListener(
+      "click",
+      () =>
+        showView(
+          "deliveries"
+        )
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     CANCEL FORM
+  ------------------------------------------------------- */
+
+  const cancelForm =
+    $("cancelForm");
+
+
+  if (cancelForm) {
+
+    cancelForm.addEventListener(
+      "click",
+      () => {
 
         editingId =
           null;
 
+        showView(
+          "dashboard"
+        );
+      }
+    );
+  }
 
-        if (shell) {
 
-          shell.style.display =
-            "none";
+  /* -------------------------------------------------------
+     QUICK ACTIONS
+  ------------------------------------------------------- */
+
+  document
+    .querySelectorAll(
+      "[data-action]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const action =
+              button.dataset.action;
+
+
+            if (
+              action ===
+              "new"
+            ) {
+
+              openNew();
+
+            } else {
+
+              showView(
+                "deliveries"
+              );
+            }
+          }
+        );
+      }
+    );
+
+
+  /* -------------------------------------------------------
+     SEARCH
+  ------------------------------------------------------- */
+
+  const searchInput =
+    $("searchInput");
+
+
+  if (searchInput) {
+
+    searchInput.addEventListener(
+      "input",
+      renderTable
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     STATUS FILTER
+  ------------------------------------------------------- */
+
+  const statusFilter =
+    $("statusFilter");
+
+
+  if (statusFilter) {
+
+    statusFilter.addEventListener(
+      "change",
+      renderTable
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     CLEAR FILTERS
+  ------------------------------------------------------- */
+
+  const clearFilters =
+    $("clearFilters");
+
+
+  if (clearFilters) {
+
+    clearFilters.addEventListener(
+      "click",
+      () => {
+
+        if ($("searchInput")) {
+
+          $("searchInput")
+            .value = "";
         }
 
 
-        if ($("loginScreen")) {
+        if ($("statusFilter")) {
 
-          $("loginScreen")
-            .style
-            .display =
-            "flex";
+          $("statusFilter")
+            .value = "";
         }
+
+
+        renderTable();
       }
+    );
+  }
 
 
-      if (
-        event ===
-        "SIGNED_IN" &&
-        session
-      ) {
+  /* -------------------------------------------------------
+     EXPORT CSV
+  ------------------------------------------------------- */
 
-        currentUser =
-          session.user;
+  const exportCsvBtn =
+    $("exportCsvBtn");
+
+
+  if (exportCsvBtn) {
+
+    exportCsvBtn.addEventListener(
+      "click",
+      exportCsv
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     BACKUP
+  ------------------------------------------------------- */
+
+  const backupBtn =
+    $("backupBtn");
+
+
+  if (backupBtn) {
+
+    backupBtn.addEventListener(
+      "click",
+      backup
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     RESTORE
+  ------------------------------------------------------- */
+
+  const restoreInput =
+    $("restoreInput");
+
+
+  if (restoreInput) {
+
+    restoreInput.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files[0];
+
+
+        if (file) {
+
+          restoreBackup(
+            file
+          );
+        }
+
+
+        event.target.value =
+          "";
       }
+    );
+  }
 
-    }
+
+  /* -------------------------------------------------------
+     INITIAL DISPLAY
+  ------------------------------------------------------- */
+
+  renderDashboard();
+
+  showView(
+    "dashboard"
   );
 }
 
 
 /* =========================================================
-   RUN
+   START
 ========================================================= */
 
-startApp();
-```
+if (
+  document.readyState ===
+  "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initApp
+  );
+
+} else {
+
+  initApp();
+}
